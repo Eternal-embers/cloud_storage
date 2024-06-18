@@ -1,0 +1,55 @@
+@charset "UTF-8";
+
+.pop-up {
+    position: absolute;
+    top: 5vh;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 1vw;
+    padding: 1vh 1vw;
+    box-shadow: 5px 5px 10px 0 rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+}
+
+/* 弹窗出现的动画 */
+@keyframes slideDown {
+    from {
+        top: -5vh;
+        opacity: 0;
+    }
+
+    to {
+        top: 5vh;
+        opacity: 1;
+    }
+}
+
+/* 弹窗消失的动画 */
+@keyframes slideUp {
+    from {
+        top: 5vh;
+        opacity: 1;
+    }
+
+    to {
+        top: -5vh;
+        opacity: 0;
+    }
+}
+
+.pop-up.show {
+    animation: slideDown 1s ease-in-out forwards;
+}
+
+.pop-up.hide {
+    animation: slideUp 1s ease-in-out forwards;
+}
+
+.pop-up-info {
+    color: rgba(0, 0, 0, 0.8);
+}

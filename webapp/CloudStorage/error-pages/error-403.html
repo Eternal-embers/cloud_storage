@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - 禁止访问</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #333;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .error-container {
+            max-width: 600px;
+            padding: 20px;
+            background: #222;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .error-code {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .error-description {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            font-size: 1em;
+            margin-bottom: 40px;
+        }
+        .button-home {
+            padding: 10px 30px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .button-home:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <div class="error-code">403</div>
+    <div class="error-description">禁止访问</div>
+    <div class="error-message">你没有权限访问此页面。如果你认为这是一个错误，请与网站管理员联系。</div>
+    <a href="http://localhost:8080/CloudStorage/" class="button-home">返回主页</a>
+</div>
+</body>
+</html>

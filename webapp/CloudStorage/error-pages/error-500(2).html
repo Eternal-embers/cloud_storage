@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - 内部服务器错误</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f7f7f7;
+        }
+        .error-container {
+            text-align: center;
+        }
+        .error-code {
+            padding: 2vh;
+            font-size: 4em;
+            color: #3d3d3d;
+        }
+        .error-description {
+            font-size: 1.5em;
+            color: #5a5a5a;
+        }
+        .error-message {
+            padding: 1vh;
+            font-size: 1em;
+            color: #6c6c6c;
+            margin-bottom: 24px;
+        }
+        .button-home {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .button-home:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <div class="error-code">500</div>
+    <div class="error-description">内部服务器错误</div>
+    <div class="error-message">抱歉，我们的服务器遇到了一些问题。请稍后再试或返回主页。</div>
+    <a href="http://localhost:8080/CloudStorage/" class="button-home">返回主页</a>
+</div>
+</body>
+</html>

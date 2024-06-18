@@ -1,0 +1,98 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>500 - 内部服务器错误</title>
+    <style>
+         body {
+          background-color: #333333;
+          width: 100vw;
+          height: 100vh;
+          color: white;
+          font-family: "Arial Black";
+          text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+        }
+
+        .error-num {
+          font-size: 8em;
+        }
+
+        .eye {
+          background: #fff;
+          border-radius: 50%;
+          display: inline-block;
+          height: 100px;
+          position: relative;
+          width: 100px;
+        }
+        .eye::after {
+          background: #000;
+          border-radius: 50%;
+          bottom: 56.1px;
+          content: "";
+          height: 33px;
+          position: absolute;
+          right: 33px;
+          width: 33px;
+        }
+
+        p {
+          margin-bottom: 4em;
+        }
+
+        .button-home {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .button-home:hover {
+            background: #0056b3;
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+
+<div>
+    <span class='error-num'>5</span>
+    <div class='eye'></div>
+    <div class='eye'></div>
+    <div>内部服务器错误</div>
+    <p>抱歉，我们的服务器遇到了一些问题。请稍后再试或返回主页。</p>
+    <a class='button-home' href='http://localhost:8080/CloudStorage/'>回到主页</a>
+</div>
+
+<script defer>
+    document.body.addEventListener('mousemove', function(event) {
+        // 获取所有类名为eye的元素
+        var eyes = document.querySelectorAll('.eye');
+
+        // 遍历所有匹配的元素
+        eyes.forEach(function(eye) {
+            // 计算当前元素eye的中心点坐标
+            var x = eye.getBoundingClientRect().left + eye.offsetWidth / 2;
+            var y = eye.getBoundingClientRect().top + eye.offsetHeight / 2;
+
+            // 计算鼠标相对于元素中心点的角度
+            var rad = Math.atan2(event.pageX - x, event.pageY - y);
+            var rot = (rad * (180 / Math.PI) * -1) + 180;
+
+            // 设置当前元素的旋转角度
+            eye.style.webkitTransform = 'rotate(' + rot + 'deg)';
+            eye.style.transform = 'rotate(' + rot + 'deg)';
+        });
+    });
+</script>
+
+</body>
+
+</html>

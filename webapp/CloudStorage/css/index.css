@@ -1,0 +1,255 @@
+@charset "UTF-8";
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+}
+
+body {
+    background-color: #000;
+}
+
+#background-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    filter: brightness(0.5);
+}
+
+
+.start .logo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(50%, 50%);
+    width: 6vw;
+    height: 5vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.start .brand {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1vw;
+    margin-left: 0.5vw;
+}
+
+.start .title {
+    font-size: 4em;
+}
+
+.start .intro {
+    color: rgba(255, 255, 255, 0.5);
+    padding: 1vh 0;
+}
+
+#login {
+    --border-width: 1px;
+    --radius: 2vw;
+    position: relative;
+    border-radius: var(--radius);
+    border: var(--border-width) solid transparent;
+    background-color: rgb(69, 123, 204);
+    padding: 1vh 2vw;
+    margin-top: 2vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+#login:hover {
+    background-color: rgb(60, 143, 238);
+    box-shadow: 0 0 1vw rgba(255, 255, 255, 0.5);
+}
+
+#login:active {
+    background-color: rgb(60, 143, 238);
+    box-shadow: 0 0 2vw rgba(255, 255, 255, 0.7) inset,
+        0 0 1vw rgba(255, 255, 255, 0.5);
+}
+
+#login div {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1vw;
+    margin-right: 1vw;
+}
+
+.parallax {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+}
+
+.p1 {
+    background-image: url("../image/1.jpg");
+}
+
+.p2 {
+    background-image: url("../image/2.jpg");
+}
+
+.p3 {
+    background-image: url("../image/3.jpg");
+}
+
+.p4 {
+    background-image: url("../image/4.jpg");
+}
+
+.p5 {
+    background-image: url("../image/5.jpg");
+}
+
+.p6 {
+    background-image: url("../image/6.jpg");
+}
+
+.content {
+    width: 50vw;
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: #fff;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.item {
+    height: 20vh;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.title {
+    font-size: 3vw;
+    padding: 2vh 0;
+}
+
+.item .intro {
+    font-size: 1vw;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 1vh 5vw;
+}
+
+.parallax .next {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-bottom: 2vh;
+    padding: 0.25vh 1vw;
+}
+
+.next svg {
+    fill: rgba(255, 255, 255, 0.5);
+}
+
+.next:hover svg {
+    fill: rgba(255, 255, 255);
+}
+
+.parallax .top {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translate(-50%, -50%);
+    margin: 2vh 2vw;
+}
+
+.top svg {
+    fill: rgba(0, 0, 0, 0.3);
+}
+
+.top:hover svg {
+    fill: rgba(0, 0, 0);
+}
+
+.footer {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.footer .follow {
+    margin: 0 auto;
+    width: 60%;
+    height: 10vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.follow .follow-icon {
+    padding: 1vh 1vw;
+}
+
+.follow-icon svg {
+    fill: rgba(255, 255, 255, 0.5);
+}
+
+.follow-icon svg:hover {
+    fill: rgba(255, 255, 255, 0.8);
+}
+
+.footer .link {
+    padding: 3vh 0;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.link-item {
+    flex: 1;
+    min-width: 10vw;
+    margin: 0 2.5vw;
+}
+
+.link-item h3 {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1vh;
+}
+
+.link-item ul {
+    list-style: none;
+    padding: 0;
+}
+
+.link-item li {
+    margin-bottom: 5px;
+}
+
+.link-item a {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+}
+
+.link-item a:hover {
+    text-decoration: underline;
+}
+
+.footer .copyright {
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 0.8vw;
+    margin-bottom: 5vh;
+}

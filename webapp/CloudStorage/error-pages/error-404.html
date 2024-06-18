@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>404 Not Found</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f3f3f3;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .error-container {
+            text-align: center;
+        }
+        .error-code {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        .error-description {
+            font-size: 1.5em;
+            margin-bottom: 50px;
+        }
+        .error-message {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        a {
+            text-decoration: none;
+            color: #337ab7;
+            padding: 10px 15px;
+            border: 1px solid #337ab7;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        a:hover {
+            background-color: #337ab7;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <div class="error-code">404</div>
+    <div class="error-description">哎呀！找不到页面。</div>
+    <div class="error-message">您正在查找的页面可能已被删除、名称已更改或暂时不可用。</div>
+    <a href="http://localhost:8080/CloudStorage/" target="_self">跳转到首页</a>
+</div>
+</body>
+</html>
