@@ -78,16 +78,12 @@ public class SignUp extends HttpServlet implements Secure {
             if (cur.after(captchaExpires)) {
                 response.sendRedirect("login.html?captcha_overtime=true");
             } else if(captcha != null && captcha.equals(code)){
-                User user = new User(email, password);
-
                 //生成用户名
                 String userName = "用户" + generateRandomUsername(10);
 
                 //对密码进行加密
                 byte[] salt = generateSalt();
-                user.setSalt(Base64.getEncoder().encodeToString(salt));
                 byte[] password_hash = hashPassword(password, salt, 10000, 256);
-                user.setPassword_hash(Base64.getEncoder().encodeToString(password_hash));
 
                 try {
                     ps = conn.prepareStatement("insert into user(user_name, identifier, salt, password_hash, storage_quota) values(?,?,?,?,?)");

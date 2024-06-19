@@ -39,6 +39,7 @@
                 user.setSourceFrom(rs.getString("source_from"));//用户来源
                 user.setBindStatus(rs.getBoolean("bind_status"));//绑定状态
                 user.setCreateTime(rs.getDate("create_time"));//创建时间
+                user.setAvatar(rs.getString("avatar"));//用户头像
             }
        } catch (Exception e) {
            e.printStackTrace();
@@ -90,6 +91,7 @@
         .label {
             font-weight: bold;
             color: #555;
+            margin-right: 10px;
         }
         .value {
             color: #777;
@@ -111,6 +113,8 @@
                     <li><span class="label">用户来源:</span> <span class="value"><%= user.getSourceFrom() %></span></li>
                     <li><span class="label">绑定状态:</span> <span class="value"><%= user.getBindStatus() ? "已绑定" : "未绑定" %></span></li>
                     <li><span class="label">创建时间:</span> <span class="value"><%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(user.getCreateTime()) %></span></li>
+                    <li><span class="label">用户头像:</span> <span class="value"><%= user.getAvatar() %></span></li>
+                    <li style="display: flex; align-items: center;"><span class="label">用户头像:</span> <span class="value"><img style="max-width: 10vw;" src="../avatar/<%= user.getAvatar() %>" alt="用户头像"></span></li>
                 </ul>
             </div>
         <% } else { %>

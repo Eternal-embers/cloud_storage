@@ -53,17 +53,38 @@ public class Verify extends HttpServlet {
 
         //判断账号是否已经存在
         String email = request.getParameter("email");
-        try {
-            ps = conn.prepareStatement("SELECT * FROM user WHERE identifier = ?");
-            ps.setString(1, email);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                System.out.println("Email already exists: " + email);
-                response.setStatus(HttpServletResponse.SC_CONFLICT);
-                return;
+        String type = request.getParameter("type");
+        if (type != null && type.equals("register")) {
+            // 注册模式，检查邮箱是否已注册
+            try {
+                ps = conn.prepareStatement("SELECT user_id FROM user WHERE identifier = ?");
+                ps.setString(1, email);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    System.out.println("Email already exists: " + email);
+                    response.setStatus(HttpServletResponse.SC_CONFLICT);
+                    return;
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+        }
+
+        if (type != null && type.equals("reset")) {
+            // 重置密码模式，检查邮箱是否已注册
+            try {
+                ps = conn.prepareStatement("SELECT user_id FROM user WHERE identifier = ?");
+                ps.setString(1, email);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) {
+                    System.out.println("Email not exists: " + email);
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    response.getWriter().println("Email not exists.");
+                    return;
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
 
         /* 将验证码添加到session中，并设置session为HttpOnly，防止通过js获取验证码 */
@@ -151,6 +172,8 @@ public class Verify extends HttpServlet {
             Transport.send(message);
 
             System.out.println("Send captchaCode '" + captchaCode + "' to email: " + email);
+
+            response.getWriter().println("Send captchaCode successfully.");
         } catch (MessagingException e) {
             e.printStackTrace();
             response.getWriter().println("Error sending email.");
