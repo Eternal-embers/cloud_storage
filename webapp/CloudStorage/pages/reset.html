@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../image/reset.png">
+    <title>修改密码</title>
+    <link rel="stylesheet" href="../css/reset.css">
+    <script defer src="../js/reset.js"></script>
+</head>
+
+<body>
+<div class="change-password-container">
+    <form id="changePasswordForm" method="POST" action="reset" target="_self">
+        <h2>修改密码</h2>
+
+        <div class="input-group">
+            <label for="identifier">账号:</label>
+            <input type="text" id="identifier" name="identifier" required>
+        </div>
+
+        <div class="input-group">
+            <label for="verificationCode">短信验证码:</label>
+            <input type="text" id="verificationCode" name="verificationCode" required>
+            <button type="button" class="resend-code">发送</button>
+        </div>
+
+        <div class="input-group">
+            <label for="newPassword">新密码:</label>
+            <input type="password" id="newPassword" name="newPassword" minlength="6" maxlength="20"
+                   pattern="^(?=.*[A-Za-z])(?=.*\d).+$" required>
+        </div>
+
+        <div class="input-group">
+            <label for="confirmPassword">确认密码:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required>
+        </div>
+
+        <button type="submit" class="submit-button">提交</button>
+    </form>
+</div>
+</body>
+
+</html>

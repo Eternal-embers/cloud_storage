@@ -1,0 +1,93 @@
+/* 页面整体样式 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* 表单容器样式 */
+.change-password-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+/* 表单标题样式 */
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* 输入组样式 */
+.input-group {
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#verificationCode {
+    width: 75%;
+}
+
+.input-group .resend-code {
+    position: absolute;
+    top: 30px;
+    right: 5px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 80px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+}
+
+.input-group .resend-code:hover {
+    background: #0056b3;
+}
+
+/* 提交按钮样式 */
+.submit-button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.submit-button:hover {
+    background-color: #218838;
+}
+
+/* 字体图标样式 */
+.fa-redo {
+    margin-right: 5px;
+}
