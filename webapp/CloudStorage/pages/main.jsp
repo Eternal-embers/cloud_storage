@@ -2,12 +2,18 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="user.User" %>
 <%@ page import="java.util.*" %>
+<%@ page import="java.io.*" %>
+<%@ page import="java.text.DateFormat" %>
 
-<%
-    Long userID = (Long) session.getAttribute("userID");
+<%!
     Connection conn = null;
     PreparedStatement pstmt = null;
+    User user = null;
+    double usedStorage = 0.0;
+    Long userID = null;
+%>
 
+<%
     try {
         Class.forName("com.mysql.cj.jdbc.Driver");
         conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/cloudstorage", "root", "kv");
@@ -17,8 +23,57 @@
     } catch (ClassNotFoundException ex) {
         ex.printStackTrace();
     }
+%>
 
-    User user = null;
+<%
+    userID = (Long) session.getAttribute("userID");
+    response.addCookie(new Cookie("userID", userID.toString()));
+    response.getWriter().println(String.format("<div id='userID' user-id='%s' display='none'></div>", userID));
+
+    //计算已使用存储
+    pstmt = conn.prepareStatement("select sum(file_size) as used_storage from files where user_id = ?");
+    pstmt.setLong(1, userID);
+    pstmt.executeQuery();
+    ResultSet usedStorageRs = pstmt.getResultSet();
+    if(usedStorageRs.next()){
+        usedStorage = usedStorageRs.getDouble("used_storage");
+        usedStorageRs.close();
+    }
+
+    try{
+        usedStorageRs.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    //更新数据库中的已用存储
+    pstmt = conn.prepareStatement("update user set used_storage = ? where user_id = ?");
+    pstmt.setDouble(1, usedStorage);
+    pstmt.setLong(2, userID);
+    pstmt.execute();
+
+
+    double usedStorageValue;
+    String usedStorageStr;
+    if(usedStorage < 1024){
+        usedStorageValue = usedStorage;
+        usedStorageStr = String.format("%.2f", usedStorageValue) + " B";
+    } else if(usedStorage < 1024*1024){
+        usedStorageValue = usedStorage / 1024;
+        usedStorageStr = String.format("%.2f", usedStorageValue) + " KB";
+    } else if(usedStorage < 1024*1024*1024){
+        usedStorageValue = usedStorage / 1024 / 1024;
+        usedStorageStr = String.format("%.2f", usedStorageValue) + " MB";
+    } else {
+        usedStorageValue = usedStorage / 1024 / 1024 / 1024;
+        usedStorageStr = String.format("%.2f", usedStorageValue)+ " GB";
+    }
+
+    request.setAttribute("usedStorage", usedStorage);
+    request.setAttribute("usedStorageStr", usedStorageStr);
+%>
+
+<%
     if(userID!= null) {
         try{
             pstmt = conn.prepareStatement("select * from user where user_id = ?");
@@ -55,6 +110,13 @@
     request.setAttribute("user", user);
 %>
 
+<%
+    String message = request.getParameter("message");
+    if(message!= null){
+        out.print("<script>alert('" + message + "')</script>");
+    }
+%>
+
 <!DOCTYPE html>
 
 <html>
@@ -68,7 +130,7 @@
 </head>
 
 <body>
-    <a href="main.html" target="_self">
+    <a href="main.jsp" target="_self">
         <div class="logo">
             <svg t="1718698075558" class="logo-icon" viewBox="0 0 1474 1024" version="1.1"
                 xmlns="http://www.w3.org/2000/svg" p-id="10809" width="1.5vw" height="1.5vw">
@@ -82,6 +144,33 @@
             <div class="logo-info">云存储</div>
         </div>
     </a>
+
+    <div class="forum" onclick="window.open('forum.jsp','_blank');">
+            <svg t="1718892500327" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                p-id="15391" width="1vw" height="1vw">
+                <path
+                    d="M256.426667 213.333333C257.493333 164.992 305.749333 128.469333 362.709333 128.426667L875.008 128.213333a106.453333 106.453333 0 0 1 106.410667 106.752v383.829334c0 53.973333-43.52 106.794667-84.864 106.794666a21.76 21.76 0 0 1-0.64 0 127.914667 127.914667 0 0 1-127.658667 123.562667h-276.650667c-33.493333 0-81.28 24.234667-101.162666 51.413333l-21.034667 28.629334c-34.176 46.634667-94.890667 38.272-114.517333-16.341334l-7.765334-21.546666c-9.472-26.410667-43.434667-48.725333-71.808-47.146667l-2.005333 0.128A122.368 122.368 0 0 1 42.666667 721.066667V341.418667A127.914667 127.914667 0 0 1 170.453333 213.333333H256.426667zM896 682.88a21.76 21.76 0 0 1 0.554667 0c15.786667 0 42.197333-32.085333 42.197333-64.128V234.922667c0-35.498667-28.501333-64.085333-63.701333-64.085334l-512.298667 0.298667c-35.242667 0-62.293333 20.053333-63.658667 42.197333h469.12A127.658667 127.658667 0 0 1 896 341.418667v341.461333zM85.333333 341.418667V721.066667c0 47.573333 38.314667 83.2 85.546667 80.554666l2.048-0.085333c47.146667-2.688 98.474667 31.018667 114.346667 75.264l7.765333 21.546667c8.021333 22.357333 25.898667 24.746667 39.978667 5.546666l20.992-28.586666C384 837.12 444.586667 806.4 491.605333 806.4h276.650667A85.248 85.248 0 0 0 853.333333 721.066667V341.418667A84.992 84.992 0 0 0 768.213333 256H170.453333A85.248 85.248 0 0 0 85.333333 341.418667z"
+                    p-id="15392"></path>
+                <path
+                    d="M298.666667 554.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333333 0 42.666667 42.666667 0 1 0-85.333333 0Z"
+                    p-id="15393"></path>
+                <path
+                    d="M469.333333 554.666667m-42.666666 0a42.666667 42.666667 0 1 0 85.333333 0 42.666667 42.666667 0 1 0-85.333333 0Z"
+                    p-id="15394"></path>
+                <path
+                    d="M640 554.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z"
+                    p-id="15395"></path>
+            </svg>
+        </div>
+
+    <div class="setting">
+        <svg t="1718719737080" class="setting-icon" viewBox="0 0 1024 1024" version="1.1"
+            xmlns="http://www.w3.org/2000/svg" p-id="13146">
+            <path
+                d="M960.620725 848.835765H279.118607a127.096471 127.096471 0 0 0-122.88-94.750118c-70.113882 0-127.036235 56.621176-127.036235 126.313412s56.922353 126.373647 126.976 126.373647c59.030588 0 108.845176-40.357647 122.940235-94.750118h681.502118a31.683765 31.683765 0 1 0 0-63.247059zM156.178372 943.585882c-34.996706 0-63.488-28.310588-63.488-63.186823 0-34.816 28.491294-63.186824 63.488-63.186824 35.056941 0 63.488 28.310588 63.488 63.186824 0 34.816-28.431059 63.186824-63.488 63.186823zM961.223078 493.327059h-97.882353a127.096471 127.096471 0 0 0-245.880471 0H65.102607a31.683765 31.683765 0 0 0-31.804235 31.563294c0 17.468235 14.215529 31.563294 31.744 31.563294h552.357647a127.096471 127.096471 0 0 0 245.940706 0h97.882353a31.623529 31.623529 0 1 0 0-63.126588z m-220.822589 94.750117c-34.996706 0-63.488-28.310588-63.488-63.247058 0-34.816 28.491294-63.126588 63.488-63.126589 34.996706 0 63.488 28.310588 63.488 63.186824 0 34.816-28.491294 63.186824-63.488 63.186823zM156.178372 295.695059c59.030588 0 108.845176-40.357647 122.940235-94.750118h681.502118a31.623529 31.623529 0 1 0 0-63.186823H279.118607A127.096471 127.096471 0 0 0 29.202372 169.381647c0 69.632 56.922353 126.313412 126.976 126.313412z m0-189.500235c35.056941 0 63.488 28.310588 63.488 63.186823 0 34.816-28.431059 63.126588-63.488 63.126588-34.996706 0-63.488-28.310588-63.488-63.126588 0-34.936471 28.491294-63.247059 63.488-63.247059z"
+                p-id="13147"></path>
+        </svg>
+    </div>
 
     <div class="mode">
         <input type="checkbox" id="light-mode" checked>
@@ -107,16 +196,6 @@
         </label>
     </div>
 
-    <div class="setting">
-        <svg t="1718719737080" class="setting-icon" viewBox="0 0 1024 1024" version="1.1"
-            xmlns="http://www.w3.org/2000/svg" p-id="13146">
-            <path
-                d="M960.620725 848.835765H279.118607a127.096471 127.096471 0 0 0-122.88-94.750118c-70.113882 0-127.036235 56.621176-127.036235 126.313412s56.922353 126.373647 126.976 126.373647c59.030588 0 108.845176-40.357647 122.940235-94.750118h681.502118a31.683765 31.683765 0 1 0 0-63.247059zM156.178372 943.585882c-34.996706 0-63.488-28.310588-63.488-63.186823 0-34.816 28.491294-63.186824 63.488-63.186824 35.056941 0 63.488 28.310588 63.488 63.186824 0 34.816-28.431059 63.186824-63.488 63.186823zM961.223078 493.327059h-97.882353a127.096471 127.096471 0 0 0-245.880471 0H65.102607a31.683765 31.683765 0 0 0-31.804235 31.563294c0 17.468235 14.215529 31.563294 31.744 31.563294h552.357647a127.096471 127.096471 0 0 0 245.940706 0h97.882353a31.623529 31.623529 0 1 0 0-63.126588z m-220.822589 94.750117c-34.996706 0-63.488-28.310588-63.488-63.247058 0-34.816 28.491294-63.126588 63.488-63.126589 34.996706 0 63.488 28.310588 63.488 63.186824 0 34.816-28.491294 63.186824-63.488 63.186823zM156.178372 295.695059c59.030588 0 108.845176-40.357647 122.940235-94.750118h681.502118a31.623529 31.623529 0 1 0 0-63.186823H279.118607A127.096471 127.096471 0 0 0 29.202372 169.381647c0 69.632 56.922353 126.313412 126.976 126.313412z m0-189.500235c35.056941 0 63.488 28.310588 63.488 63.186823 0 34.816-28.431059 63.126588-63.488 63.126588-34.996706 0-63.488-28.310588-63.488-63.126588 0-34.936471 28.491294-63.247059 63.488-63.247059z"
-                p-id="13147"></path>
-        </svg>
-    </div>
-
-
     <div class="user">
         <img class="user-avatar" src="../avatar/<%= user.getAvatar() %>" alt="头像" />
     </div>
@@ -136,17 +215,31 @@
             <div class="account">账号：<%= user.getIdentifier() %></div>
             <div class="storage">
                 <%! private double storageUsedPercentage; %>
-                <%  storageUsedPercentage = user.getUsedStorage() / user.getStorageQuota() * 100; %>
+                <%
+                    storageUsedPercentage = user.getUsedStorage() / 1024 / 1024 / user.getStorageQuota() * 100;
+                    System.out.println("storageUsedPercentage: " + storageUsedPercentage + "%");
+                %>
                 <div class="info">存储使用情况：</div>
                 <div class="storage-bar">
-                    <div class="storage-used" style="width:<%= storageUsedPercentage %>%;" ></div>
+                    <div class="storage-used" style="width:<%= String.format("%.2f", storageUsedPercentage) %>%;" ></div>
                 </div>
+                <div class="used-percentage">已用存储空间占比： <%= String.format("%.2f", storageUsedPercentage) %>%</div>
                 <div class="quota">总存储空间：<%= user.getStorageQuota() %> MB</div>
-                <div class="used">已使用存储空间：<%= user.getUsedStorage() %> MB</div>
+                <div class="used">已使用存储空间：<%= request.getAttribute("usedStorageStr") %></div>
             </div>
         </div>
 
-        <div id="logout">
+        <div class="change-password">
+                <svg t="1718812699806" class="password-icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="17348">
+                    <path
+                        d="M819.2 1004.8H204.8c-64 0-108.8-57.6-108.8-121.6V576c0-70.4 44.8-128 108.8-128V358.4C204.8 172.8 339.2 19.2 512 19.2c172.8 0 307.2 153.6 307.2 339.2 0 19.2-12.8 32-25.6 32s-25.6-12.8-25.6-32c0-153.6-115.2-275.2-249.6-275.2-140.8 0-249.6 121.6-249.6 275.2V448h556.8c64 0 108.8 57.6 108.8 121.6v307.2c-6.4 76.8-51.2 128-115.2 128z m57.6-428.8c0-32-25.6-64-57.6-64H204.8c-32 0-57.6 25.6-57.6 64v307.2c0 32 25.6 64 57.6 64h614.4c32 0 57.6-25.6 57.6-64V576z m-339.2 179.2v96c0 19.2-12.8 32-25.6 32s-25.6-12.8-25.6-32v-96c-32-12.8-57.6-44.8-57.6-83.2C428.8 614.4 467.2 576 512 576c44.8 0 83.2 38.4 83.2 89.6 0 38.4-25.6 76.8-57.6 89.6zM512 633.6c-12.8 0-25.6 12.8-25.6 32s12.8 32 25.6 32 25.6-12.8 25.6-32-12.8-32-25.6-32z m0 0"
+                        p-id="17349"></path>
+                </svg>
+                <span>修改密码</span>
+         </div>
+
+        <div id="logout" onclick="window.location.href='login.html'">
             <span class="info">退出登录</span>
             <svg t="1718765094141" class="logout-icon" viewBox="0 0 1024 1024" version="1.1"
                 xmlns="http://www.w3.org/2000/svg" p-id="11407">
@@ -204,7 +297,7 @@
                 <div class="name">文档</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size"> 1.2&nbsp;MB</div>
+                <div class="size"> 0&nbsp;MB</div>
             </div>
             <div class="folder image">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
@@ -216,7 +309,7 @@
                 <div class="name">图片</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size"> 23&nbsp;kB</div>
+                <div class="size"> 0&nbsp;kB</div>
             </div>
             <div class="folder music">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
@@ -228,7 +321,7 @@
                 <div class="name">音乐</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size"> 110.6&nbsp;MB</div>
+                <div class="size"> 0&nbsp;MB</div>
             </div>
             <div class="folder video">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
@@ -240,7 +333,7 @@
                 <div class="name">视频</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size">2300&nbsp;MB</div>
+                <div class="size">0&nbsp;MB</div>
             </div>
             <div class="folder other">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
@@ -252,99 +345,232 @@
                 <div class="name">其他</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size"> 1384.9&nbsp;MB</div>
+                <div class="size">0&nbsp;MB</div>
             </div>
 
-            <div class="folder other">
-                <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="22970">
-                    <path
-                        d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
-                        p-id="22971"></path>
-                </svg>
-                <div class="name">Anime</div>
-                <div class="modify-date">2024年6月19日 12:45</div>
-                <div class="type">用户文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
-            </div>
+            <%
+                try {
+                    Map<String, Integer> fileTypeMap = new HashMap<>();
 
-            <div class="folder other">
-                <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="22970">
-                    <path
-                        d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
-                        p-id="22971"></path>
-                </svg>
-                <div class="name">programming</div>
-                <div class="modify-date">2024年6月19日 12:45</div>
-                <div class="type">用户文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
-            </div>
+                    /*
+                        文档类型：doc, docx, pdf, txt, odt, rtf, wpd, epub, xlsx, xls, xlsm, pptx, ppt, pps
+                        图片类型：jpg, jpeg, png, gif, bmp, tiff, svg, webp
+                        视频类型: mp4, avi mov wmv mkv flv mpg mpeg
+                        音频类型：mp3 ogg wma aac flac m4a
+                        其他类型：zip, rar, 7z, tar, gz, exe等等
+                     */
 
-            <div class="folder other">
-                <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="22970">
-                    <path
-                        d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
-                        p-id="22971"></path>
-                </svg>
-                <div class="name">计算机资源</div>
-                <div class="modify-date">2024年6月19日 12:45</div>
-                <div class="type">用户文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
-            </div>
+                    // 文档类型
+                    fileTypeMap.put(".doc", 1);
+                    fileTypeMap.put(".docx", 1);
+                    fileTypeMap.put(".pdf", 1);
+                    fileTypeMap.put(".txt", 1);
+                    fileTypeMap.put(".odt", 1);
+                    fileTypeMap.put(".rtf", 1);
+                    fileTypeMap.put(".wpd", 1);
+                    fileTypeMap.put(".epub", 1);
+                    fileTypeMap.put(".xlsx", 1); // 表格文档
+                    fileTypeMap.put(".xls", 1);
+                    fileTypeMap.put(".xlsm", 1);
+                    fileTypeMap.put(".pptx", 1); // 演示文档
+                    fileTypeMap.put(".ppt", 1);
+                    fileTypeMap.put(".pps", 1);
 
-            <div class="folder other">
-                <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="22970">
-                    <path
-                        d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
-                        p-id="22971"></path>
-                </svg>
-                <div class="name">schoolwork</div>
-                <div class="modify-date">2024年6月19日 12:45</div>
-                <div class="type">用户文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
-            </div>
+                    // 图片类型
+                    fileTypeMap.put(".jpg", 2);
+                    fileTypeMap.put(".jpeg", 2);
+                    fileTypeMap.put(".png", 2);
+                    fileTypeMap.put(".gif", 2);
+                    fileTypeMap.put(".bmp", 2);
+                    fileTypeMap.put(".tiff", 2);
+                    fileTypeMap.put(".svg", 2);
+                    fileTypeMap.put(".webp", 2);
 
-            <div class="folder other">
-                <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="22970">
-                    <path
-                        d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
-                        p-id="22971"></path>
-                </svg>
-                <div class="name">university</div>
-                <div class="modify-date">2024年6月19日 12:45</div>
-                <div class="type">用户文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
-            </div>
+                    // 视频类型
+                    fileTypeMap.put(".mp4", 3);
+                    fileTypeMap.put(".avi", 3);
+                    fileTypeMap.put(".mov", 3);
+                    fileTypeMap.put(".wmv", 3);
+                    fileTypeMap.put(".mkv", 3);
+                    fileTypeMap.put(".flv", 3);
+                    fileTypeMap.put(".mpg", 3);
+                    fileTypeMap.put(".mpeg", 3);
 
-            <div class="folder other">
-                <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="22970">
-                    <path
-                        d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
-                        p-id="22971"></path>
-                </svg>
-                <div class="name">av</div>
-                <div class="modify-date">2024年6月19日 12:45</div>
-                <div class="type">用户文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
-            </div>
+                    // 音乐类型
+                    fileTypeMap.put(".mp3", 4);
+                    fileTypeMap.put(".wav", 4);
+                    fileTypeMap.put(".aac", 4);
+                    fileTypeMap.put(".ogg", 4);
+                    fileTypeMap.put(".flac", 4);
+                    fileTypeMap.put(".m4a", 4);
 
-            <div class="folder other">
-                <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="22970">
-                    <path
-                        d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
-                        p-id="22971"></path>
-                </svg>
-                <div class="name">av</div>
-                <div class="modify-date">2024年6月19日 12:45</div>
-                <div class="type">用户文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
-            </div>
+                    StringBuilder sb = new StringBuilder();
+
+                    // 读取documentSvg
+                    String documentSvg = "";
+                    String documentSvgPath = application.getRealPath("/include/documentSvg.html");
+                    try (BufferedReader br = new BufferedReader(new FileReader(documentSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    documentSvg = sb.toString();
+
+                    // 读取imageSvg
+                    String imageSvg = "";
+                    String imageSvgPath = application.getRealPath("/include/imageSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(imageSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    imageSvg = sb.toString();
+
+                    String musicSvg = "";
+                    String musicSvgPath = application.getRealPath("/include/musicSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(musicSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    musicSvg = sb.toString();
+
+                    String videoSvg = "";
+                    String videoSvgPath = application.getRealPath("/include/videoSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(videoSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    videoSvg = sb.toString();
+
+                    String otherSvg = "";
+                    String otherSvgPath = application.getRealPath("/include/otherSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(otherSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    otherSvg = sb.toString();
+
+                    String deleteDiv = "";
+                    String deleteDivPath = application.getRealPath("/include/deleteDiv.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(deleteDivPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    deleteDiv = sb.toString();
+
+                    String sql = "SELECT * FROM files where user_id = ?";
+                    pstmt = conn.prepareStatement(sql);
+                    pstmt.setLong(1, userID);
+                    pstmt.execute();
+                    ResultSet rs = pstmt.getResultSet();
+                    while(rs.next()) {
+                        String fileName = rs.getString("file_name");
+
+                        long bytes = rs.getLong("file_size");
+                        String fileSize = "";
+                        if(bytes < 1024)
+                            fileSize = bytes + " B";
+                        else if(bytes < 1024 * 1024)
+                            fileSize = (bytes / 1024) + " KB";
+                        else if(bytes < 1024 * 1024 * 1024)
+                            fileSize = (bytes / (1024 * 1024)) + " MB";
+                        else
+                            fileSize = (bytes / (1024 * 1024 * 1024)) + " GB";
+
+                        String fileType = rs.getString("file_type");
+                        java.sql.Timestamp modifyTime = rs.getTimestamp("modify_time");
+
+                        System.out.println("fileName: " + fileName + ", fileType: " + fileType + ", fileSize: " + fileSize + ", modifyTime: " + modifyTime);
+
+                        sb.setLength(0);
+                        sb.append("<div class=\"file\">");
+
+                        //添加svg
+                        if(fileTypeMap.get(fileType) == null){
+                            sb.append(otherSvg);
+                        } else {
+                            switch(fileTypeMap.get(fileType)){
+                                case 1:{
+                                    sb.append(documentSvg);
+                                    break;
+                                }
+                                case 2:{
+                                    sb.append(imageSvg);
+                                    break;
+                                }
+                                case 3:{
+                                    sb.append(videoSvg);
+                                    break;
+                                }
+                                case 4:{
+                                    sb.append(musicSvg);
+                                    break;
+                                }
+
+                                default:{
+                                    sb.append(otherSvg);
+                                    break;
+                                }
+                            }
+                        }
+
+                        //添加文件名
+                        sb.append(String.format("<div class=\"name\">%s</div>", fileName));
+
+                        //添加文件修改时间
+                        sb.append(String.format("<div class=\"modify-date\">%s</div>", DateFormat.getDateTimeInstance().format(modifyTime)));
+
+                        //添加文件类型
+                        sb.append(String.format("<div class=\"type\">%s</div>", fileType));
+
+                        //添加文件大小
+                        sb.append(String.format("<div class=\"size\">%s</div>", fileSize));
+
+                        //添加删除按钮
+                        sb.append(deleteDiv);
+
+                        sb.append("</div>");
+
+                        out.println(sb.toString());
+                        out.flush();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            %>
 
             <div class="create-dir">
                 <svg t="1718779867985" class="create-icon" viewBox="0 0 1024 1024" version="1.1"
@@ -360,6 +586,53 @@
                     </path>
                 </svg>
             </div>
+        </div>
+    </div>
+
+    <div class="upload">
+        <form method="post" action="upload?user_id=<%= userID.toString() %>" enctype="multipart/form-data" id="uploadForm">
+            <div id="select">
+                <div class="upload-info">
+                    <svg t="1718873544506" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                        p-id="10646" width="1vw" height="1vw">
+                        <path
+                            d="M322.43 349a31.9 31.9 0 0 0 22.69-9.44L479.5 204.42l0.87 530.71a32 32 0 0 0 32 31.95h0.05A32 32 0 0 0 544.38 735l-0.87-531.1 136.9 135.8a32 32 0 0 0 45.07-45.44l-191.56-190-0.35-0.33c-0.25-0.24-0.5-0.49-0.76-0.72l-0.07-0.07-0.5-0.43-0.61-0.52-0.13-0.11-0.58-0.45-0.51-0.39-0.18-0.14-0.62-0.43-0.47-0.32-0.23-0.16-0.62-0.38-0.47-0.29-0.27-0.16L527 99l-0.51-0.28-0.28-0.15-0.56-0.28L525 98l-0.27-0.13-0.52-0.22-0.66-0.28-0.25-0.11-0.48-0.18-0.76-0.28-0.23-0.08-0.44-0.14-0.84-0.27-0.2-0.06-0.42-0.11-0.9-0.24h-0.18l-0.43-0.09-0.92-0.2h-0.16l-0.47-0.08-0.9-0.15h-0.15l-0.57-0.07-0.82-0.1h-0.14l-0.73-0.05H508.87l-0.69 0.05h-0.07l-0.87 0.11-0.59 0.07h-0.08l-1 0.17-0.48 0.08h-0.1l-1 0.21-0.44 0.1h-0.12l-0.92 0.25-0.45 0.12h-0.14l-0.84 0.27-0.49 0.16-0.17 0.06-0.73 0.28-0.55 0.21-0.2 0.09-0.62 0.27-0.62 0.27-0.22 0.11-0.51 0.25-0.68 0.34-0.23 0.13-0.42 0.24-0.73 0.41-0.21 0.13-0.35 0.22h-0.06l-0.72 0.45-0.19 0.13-0.33 0.23-0.08 0.06-0.72 0.5-0.14 0.11-0.36 0.28-0.73 0.57-0.09 0.07-0.5 0.43-0.65 0.56q-0.57 0.52-1.12 1.07l-188.95 190A32 32 0 0 0 322.43 349z"
+                            p-id="10647"></path>
+                        <path
+                            d="M928.75 605a32 32 0 0 0-32 32v224h-767.5V637a32 32 0 0 0-64 0v256a32 32 0 0 0 32 32h831.5a32 32 0 0 0 32-32V637a32 32 0 0 0-32-32z"
+                            p-id="10648"></path>
+                    </svg>
+                    <span>上传文件至云盘，请选择文件或文件夹</span>
+                </div>
+                <input type="file" id="upload-input" name="file[]" multiple="multiple" />
+            </div>
+
+            <div id="submit" style="display: none;">
+                <div class="submit-info">
+                    <svg t="1718873220138" class="submit-icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="9621" width="1vw" height="1vw">
+                        <path
+                            d="M414.273133 1024a19.76097 19.76097 0 0 1-19.741211-20.488101l8.762126-237.513979a19.749115 19.749115 0 0 1 4.202738-11.471084l503.439415-641.372015-822.359463 475.187017 249.409882 129.274208c9.688823 5.021748 13.47267 16.947289 8.450922 26.635125-5.023724 9.687835-16.946301 13.471682-26.635125 8.449934L38.362218 606.82539a19.758006 19.758006 0 1 1-0.793324-34.650361l932.344942-538.738859a19.759982 19.759982 0 0 1 29.505118 19.454706l-109.172395 912.697585a19.758994 19.758994 0 0 1-28.848132 15.124522L609.347756 847.568976l-181.518965 171.052626a19.754055 19.754055 0 0 1-13.555658 5.378398z m28.276109-250.126145l-6.748685 182.935685 156.731307-147.692555a19.76097 19.76097 0 0 1 22.780144-3.091294l239.112482 126.310359L950.834551 126.32913 442.549242 773.873855z"
+                            p-id="9622"></path>
+                    </svg>
+                    <span>发送到云盘</span>
+                </div>
+                <input type="submit" id="files-submit">
+            </div>
+        </form>
+   </div>
+
+    <div id="files-list" style="display: none;">
+        <div class="title">已选择以下文件：</div>
+        <div class="files-content"></div>
+        <div id="clear">
+            <svg t="1718886096515" class="clear-icon" viewBox="0 0 1024 1024" version="1.1"
+                xmlns="http://www.w3.org/2000/svg" p-id="13515">
+                <path
+                    d="M197.7088 478.72l39.68-39.168a19.2 19.2 0 1 1 26.9824 27.2896l-73.344 72.448a19.2 19.2 0 0 1-26.9824 0l-75.136-74.24A19.2 19.2 0 1 1 115.8912 437.76l43.0592 42.5472C175.616 300.6464 326.7328 160 510.72 160c195.1232 0 353.28 158.1568 353.28 353.28 0 195.1232-158.1568 353.28-353.28 353.28a352.0512 352.0512 0 0 1-242.0224-95.9232 19.2 19.2 0 1 1 26.2912-27.9808 313.6768 313.6768 0 0 0 215.7312 85.504c173.9008 0 314.88-140.9792 314.88-314.88 0-173.9008-140.9792-314.88-314.88-314.88-162.2272 0-295.808 122.6752-313.0112 280.32z"
+                    p-id="13516"></path>
+            </svg>
+            <span>重新上传</span>
         </div>
     </div>
 

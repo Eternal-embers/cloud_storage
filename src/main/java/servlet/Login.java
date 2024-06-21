@@ -68,6 +68,8 @@ public class Login extends HttpServlet implements Secure {
                     response.sendRedirect("login.html?login_success=true");
                     System.out.println("Login success for userID: " + userID);
                 }
+            } else{
+                response.sendRedirect("login.html?unregistered=true");
             }
         } catch (SQLException ex) {
             ex.printStackTrace();

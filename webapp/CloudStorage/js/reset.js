@@ -30,7 +30,7 @@ sendButton.addEventListener('click', function () {
     }, 1000); // 每秒更新一次
 
     const encodedEmail = encodeURIComponent(email);
-    let url = `verify?email=${encodedEmail}`;
+    let url = `verify?email=${encodedEmail}&type=reset`;
 
     //发送请求
     fetch(url, {
@@ -46,10 +46,6 @@ sendButton.addEventListener('click', function () {
             // 首先检查响应的状态
             if (!response.ok) {
                 throw new Error('网络响应不正确');
-            } else if(response.status === 404){
-                alert('该账号尚未注册！');
-            } else if(response.status === 400){
-                alert('验证码错误或已过期，请重新发送。');
             }
             // 解析响应为普通文本
             return response.text();
@@ -69,21 +65,59 @@ sendButton.addEventListener('click', function () {
 });
 
 var currentUrl = new URL(window.location);
-if (currentUrl.searchParams.get('reset') == 'false'){
-    alert('密码重置失败，请稍后重试。');
+
+
+if (currentUrl.searchParams.has('reset_overdue')){
+    alert('验证码已过期，请重新发送。');
+} else if (currentUrl.searchParams.has('reset_failed')){
+    alert('验证码错误或已过期，请重新发送。');
 }
 
 
 document.getElementById('changePasswordForm').addEventListener('submit', function (event) {
+    event.preventDefault(); // 阻止表单的默认提交行为
+
     // 获取新密码和确认密码的输入值
     var newPassword = document.getElementById('newPassword').value;
     var confirmPassword = document.getElementById('confirmPassword').value;
 
     // 检查两个密码是否相同
     if (newPassword !== confirmPassword) {
-        // 如果密码不匹配，阻止表单提交
-        event.preventDefault();
-
         alert('新密码和确认密码不匹配，请重新输入。');
+        return; // 如果密码不匹配，直接返回，不提交表单
     }
+
+    // 构建表单数据
+    const params = new URLSearchParams();
+    params.append("identifier", document.getElementById('identifier').value);
+    params.append("verificationCode", document.getElementById('verificationCode').value);
+    params.append("newPassword", newPassword);
+
+    // 使用fetch API提交表单数据
+    fetch('reset?' + params.toString(), {
+        method: 'POST',
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('密码修改成功！')
+        }
+        else if (response.status === 400) {
+            alert('验证码错误或已过期，请重新发送。');
+        } else if (response.status === 422) {
+            alert('验证码错误，请重新输入。');
+        } else if(response.status === 500) {
+            alert('服务器内部错误，请稍后重试。');
+        }
+        else if (!response.ok) {
+            throw new Error('网络响应错误：' + response.status);
+        }
+        return response.text(); // 解析响应为普通文本
+    })
+    .then(data => {
+        console.log(data);
+    })
+    .catch(error => {
+        console.error('提交表单时发生错误：', error);
+        alert('密码修改失败：' + error.message);
+    });
 });

@@ -107,8 +107,24 @@
                     <li><span class="label">用户ID:</span> <span class="value"><%= user.getUserID() %></span></li>
                     <li><span class="label">用户名:</span> <span class="value"><%= user.getUserName() %></span></li>
                     <li><span class="label">用户唯一标识:</span> <span class="value"><%= user.getIdentifier() %></span></li>
-                    <li><span class="label">存储配额:</span> <span class="value"><%= user.getStorageQuota() %></span> MB</li>
-                    <li><span class="label">已用存储:</span> <span class="value"><%= user.getUsedStorage() %></span> MB</li>
+                    <li><span class="label">存储配额:</span> <span class="value"><%= user.getStorageQuota() %></span></li>
+                    <%
+                        double usedStorage = (double) user.getUsedStorage();
+                        String usedStorageStr;
+                        if(usedStorage < 1024){
+                            usedStorageStr = String.format("%.2f", usedStorage) + " B";
+                        } else if(usedStorage < 1024*1024){
+                            usedStorage = usedStorage / 1024;
+                            usedStorageStr = String.format("%.2f", usedStorage) + " KB";
+                        } else if(usedStorage < 1024*1024*1024){
+                            usedStorage = usedStorage / 1024 / 1024;
+                            usedStorageStr = String.format("%.2f", usedStorage) + " MB";
+                        } else {
+                            usedStorage = usedStorage / 1024 / 1024 / 1024;
+                            usedStorageStr = String.format("%.2f", usedStorage)+ " GB";
+                        }
+                    %>
+                    <li><span class="label">已用存储:</span> <span class="value"><%= usedStorageStr %></span></li>
                     <li><span class="label">用户状态:</span> <span class="value"><%= user.getUserStatus() %></span></li>
                     <li><span class="label">用户来源:</span> <span class="value"><%= user.getSourceFrom() %></span></li>
                     <li><span class="label">绑定状态:</span> <span class="value"><%= user.getBindStatus() ? "已绑定" : "未绑定" %></span></li>

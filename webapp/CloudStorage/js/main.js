@@ -6,11 +6,13 @@ let user_profile = document.querySelector('.user-profile');
 user.addEventListener('click', function () {
     mask.style.display = 'block';
     user_profile.classList.toggle('slide');
+    document.body.style.overflowY = 'hidden';
 });
 
 mask.addEventListener('click', function () {
     mask.style.display = 'none';
     user_profile.classList.toggle('slide');
+    document.body.style.overflowY = 'auto';
 })
 
 //搜索框
@@ -90,4 +92,107 @@ document.getElementById('avatar-input').addEventListener('change', function(even
 
     window.open(location.href, '_self');
 });
+
+document.querySelector('.change-password').addEventListener('click', function() {
+    //打开reset.html页面
+    window.open('reset.html', '_self');
+});
+
+//文件上传
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('select').addEventListener('change', function (event) {
+        let files = event.target.files;
+
+        if (files.length == 0) return;//未选择文件
+
+        document.getElementById('select').style.display = 'none'; //隐藏上传组件
+        document.getElementById('submit').style.display = 'block';//显示提交组件
+
+
+        let filesContent = document.querySelector('.files-content');//获取文件列表块
+        filesContent.innerHTML = '';//清空文件列表
+
+        for (var i = 0; i < files.length; i++) {
+            var fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.textContent = files[i].name;
+            filesContent.appendChild(fileItem);
+        }
+
+        document.getElementById('files-list').style.display = 'block';//显示选择的文件列表
+
+        // 将元素滚动到视窗的底部
+        filesContent.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    });
+});
+
+//重新上传
+document.getElementById('clear').addEventListener('click', function () {
+        document.getElementById('submit').style.display = 'none';
+        document.getElementById('select').style.display = 'block';
+        document.getElementById('files-list').style.display = 'none';
+});
+
+//删除文件
+function deleteFile() {
+      // 找到.delete元素的父节点，即包含文件信息的div
+      const fileContainer = event.target.closest('.file');
+
+      console.log('删除文件:', fileContainer);
+
+      // 从父节点中获取文件名
+      const fileName = fileContainer.querySelector('.name').textContent;
+
+      // 假设userID存储在页面的某个元素中，例如一个隐藏的input元素
+      const userIdElement = document.getElementById('userID');
+      const userID = userIdElement ? userIdElement.getAttribute('user-id') : null;
+
+      // 检查userID是否存在
+      if (!userID) {
+        console.error('User ID not found.');
+        alert('用户似乎已经退出，请重新登录.');
+        return;
+      }
+
+      // 构建请求体
+      const requestBody = {
+        fileName: fileName,
+        userID: userID
+      };
+
+      let url = 'deleteFile?' + "user_id=" + userID + "&file_name=" + fileName;
+
+
+      // 发送请求到服务器删除文件
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(
+        response => {
+            if(response.status === 200) {
+                // 从DOM中移除父节点
+                fileContainer.remove();
+                alert('删除文件 \"' + fileName + '\" 成功！');
+            } else if (response.status === 401){
+                alert('用户似乎已经退出，请重新登录.');
+            } else if(response.status === 404){
+                alert('文件 \"' + fileName + '\" 不存在！');
+            } else if(response.status == 500){
+                alert('服务器内部错误！');
+            }
+            else if(!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+        }
+      )
+      .then(data => {
+            console.log('File deletion response:', data);
+      })
+      .catch(error => {
+            console.error('Error deleting file:', error);
+      });
+}
 

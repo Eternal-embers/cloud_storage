@@ -70,12 +70,11 @@ public class SignUp extends HttpServlet implements Secure {
             // 获取当前时间
             Date cur = new Date();
 
-            //删除session中的验证码和过期时间
-            session.removeAttribute("captcha");
-            session.removeAttribute("captcha_expires");
-
             // 检查当前时间是否超过了存储的过期时间
             if (cur.after(captchaExpires)) {
+                //删除session中的验证码和过期时间
+                session.removeAttribute("captcha");
+                session.removeAttribute("captcha_expires");
                 response.sendRedirect("login.html?captcha_overtime=true");
             } else if(captcha != null && captcha.equals(code)){
                 //生成用户名

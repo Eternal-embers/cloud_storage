@@ -51,9 +51,11 @@ public class ResetPassword extends HttpServlet implements Secure {
         String verificationCode = request.getParameter("verificationCode");
         String newPassword = request.getParameter("newPassword");
 
-        if (captcha == null || !captcha.equals(verificationCode)) {
-            response.setStatus(404);
-            response.getWriter().println("验证码错误");
+        System.out.println("processing reset password request for user: " + identifier + ", verification code: " + verificationCode + ", new password: " + newPassword);
+
+        if (!captcha.equals(verificationCode)) {
+            response.setStatus(422);
+            response.getWriter().println("Verification code is incorrect.");
             return;
         }
 
@@ -62,21 +64,20 @@ public class ResetPassword extends HttpServlet implements Secure {
 
         if(captcha == null || captchaExpires == null){
             response.setStatus(400);
-            response.getWriter().println("验证码过期");
+            response.getWriter().println("verification code expired, please get a new one");
             return;
         }
 
         // 获取当前时间
         Date cur = new Date();
 
-        //删除session中的验证码和过期时间
-        session.removeAttribute("captcha");
-        session.removeAttribute("captcha_expires");
-
         // 检查当前时间是否超过了存储的过期时间
         if (cur.after(captchaExpires)){
+            //删除session中的验证码和过期时间
+            session.removeAttribute("captcha");
+            session.removeAttribute("captcha_expires");
             response.setStatus(400);
-            response.getWriter().println("验证码过期");
+            response.getWriter().println("verification code expired, please get a new one");
             return;
         }
 
@@ -94,12 +95,11 @@ public class ResetPassword extends HttpServlet implements Secure {
             System.out.println("reset password for user: " + identifier + ", new password: " + newPassword);
 
             response.sendRedirect("login.html?reset=true");
-            response.getWriter().println("password reset successfully");
         } catch (SQLException e) {
             e.printStackTrace();
 
-            response.sendRedirect("reset.html?reset=false");
-            response.getWriter().println("password reset failed");
+            response.setStatus(500);
+            response.getWriter().println("modify password failed, please try again later.");
         } finally {
             try {
                 ps.close();

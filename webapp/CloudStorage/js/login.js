@@ -69,6 +69,7 @@ verify.addEventListener('click', function () {
         // 检查 HTTP 响应状态码是否表示成功
         if (response.ok) {
             console.log('成功发送验证码至' + email);
+            alert('验证码已发送至' + email + '，请注意查收。'); // 显示成功消息
             return;
         }else if (response.status === 409) { // 账号已存在
                 var popupDiv = document.createElement('div');
@@ -133,6 +134,30 @@ function popup() {
 document.addEventListener('DOMContentLoaded', function () {
     var currentUrl = new URL(window.location);
 
+    //账号未注册
+    if (currentUrl.searchParams.has('unregistered')) {
+        toggle();
+        var popupDiv = document.createElement('div');
+        popupDiv.classList.add('pop-up');
+        popupDiv.innerHTML = `<svg t="1718616163146" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            p-id="8873" width="1vw" height="1vw">
+            <path d="M0 0h1024v1024H0V0z" fill="#202425" opacity=".01" p-id="8874"></path>
+            <path
+                d="M955.733333 512c0 245.077333-198.656 443.733333-443.733333 443.733333S68.266667 757.077333 68.266667 512 266.922667 68.266667 512 68.266667s443.733333 198.656 443.733333 443.733333z"
+                fill="#11AA66" p-id="8875"></path>
+            <path
+                d="M512 102.4C285.7984 102.4 102.4 285.7984 102.4 512s183.3984 409.6 409.6 409.6 409.6-183.3984 409.6-409.6S738.2016 102.4 512 102.4zM34.133333 512C34.133333 248.081067 248.081067 34.133333 512 34.133333s477.866667 213.947733 477.866667 477.866667-213.947733 477.866667-477.866667 477.866667S34.133333 775.918933 34.133333 512z"
+                fill="#11AA66" p-id="8876"></path>
+            <path
+                d="M512 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v17.066666a68.266667 68.266667 0 1 1-136.533334 0V273.066667a68.266667 68.266667 0 0 1 68.266667-68.266667z m0 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v273.066666a68.266667 68.266667 0 1 1-136.533334 0v-273.066666a68.266667 68.266667 0 0 1 68.266667-68.266667z"
+                fill="#FFFFFF" p-id="8877"></path>
+        </svg>
+        <div class="pop-up-info">账号未注册。</div>`;
+        document.body.appendChild(popupDiv); // 添加到body元素
+
+        popup();
+    }
+
     //账号已经存在
     if (currentUrl.searchParams.has('registered')) {
         toggle();
@@ -151,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 d="M512 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v17.066666a68.266667 68.266667 0 1 1-136.533334 0V273.066667a68.266667 68.266667 0 0 1 68.266667-68.266667z m0 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v273.066666a68.266667 68.266667 0 1 1-136.533334 0v-273.066666a68.266667 68.266667 0 0 1 68.266667-68.266667z"
                 fill="#FFFFFF" p-id="8877"></path>
         </svg>
-        <div class="pop-up-info">账号已存在</div>`;
+        <div class="pop-up-info">账号已存在，请直接登录。</div>`;
         document.body.appendChild(popupDiv); // 添加到body元素
 
         popup();

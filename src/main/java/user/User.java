@@ -14,6 +14,7 @@ public class User {
     private String sourceFrom;//用户来源
     private boolean bindStatus;//绑定状态
     private Date createTime;//绑定时间
+    private String avatar;//用户头像
 
     public User(){
         //默认构造函数
@@ -80,6 +81,11 @@ public class User {
         return createTime;
     }
 
+    //获取用户头像
+    public String getAvatar(){
+        return avatar;
+    }
+
     //设置用户ID
     public void setUserID(long userID){
         this.userID = userID;
@@ -134,4 +140,10 @@ public class User {
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
+
+    //设置用户头像
+    public void setAvatar(String avatar){
+        this.avatar = avatar;
+    }
+
 }
