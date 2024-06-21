@@ -4,7 +4,7 @@ This is my first web project that include front and back end functionality,it ta
 
 ## Content
 
-here are the content and features:
+Here are the content and features:
 
 * Welcome page - Rolling parallax,Rolling optimization
 * Login & SignUp & ResetPIN - `PBKDF2` encryption, Mailbox verfication, random gradient background
