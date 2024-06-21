@@ -1,0 +1,118 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../image/publish.png">
+    <title>发帖</title>
+    <style>
+        /* 重置浏览器默认样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+
+        /* 发帖表单样式 */
+        .post-form {
+            width: 80%;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20vh 0;
+        }
+
+        .post-form h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            position: relative;
+            left: 50%;
+            transform: translate(-50%);
+            width: 5vw;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background: #5cb85c;
+            color: white;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background: #4cae4c;
+        }
+    </style>
+</head>
+
+<body>
+<!-- 发帖表单 -->
+<form id="postForm" class="post-form">
+    <h3 style="text-align: center;">发帖</h3>
+    <div class="form-group">
+        <label for="threadTitle">标题：</label>
+        <input type="text" id="threadTitle" name="threadTitle" required placeholder="请输入标题">
+    </div>
+    <div class="form-group">
+        <label for="threadContent">内容：</label>
+        <textarea id="threadContent" name="threadContent" rows="10" required
+                  placeholder="请输入内容，支持Markdown语法"></textarea>
+    </div>
+    <button type="submit">发布</button>
+</form>
+
+</body>
+
+<script defer>
+    document.getElementById('postForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // 阻止表单默认提交行为
+
+        const threadTitle = document.getElementById('threadTitle').value;
+        const threadContent = document.getElementById('threadContent').value;
+
+        // 这里可以添加 AJAX 请求发送帖子数据到服务器
+
+        // 模拟发帖成功，清空表单
+        alert('帖子发表成功！');
+        this.reset();
+
+        // 实际应用中，你可能需要在这里添加逻辑来动态显示新帖子
+    });
+</script>
+
+</html>
