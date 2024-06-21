@@ -6,11 +6,11 @@ This is my first web project that include front and back end functionality,it ta
 
 Here are the content and features:
 
-* Welcome page - Rolling parallax,Rolling optimization
+* Welcome page - rolling parallax,rolling optimization
 * Login & SignUp & ResetPIN - `PBKDF2` encryption, Mailbox verfication, random gradient background
-* Main Page - Multiple file upload, display by file type
-* forum - static no backend, Emoji support
-* request filter - log filter, xss filter
+* Main Page - multiple file upload, display by file type
+* Forum - static no backend, Emoji support
+* Request filter - log filter, xss filter
 
 ## Page
 
