@@ -1,15 +1,15 @@
 # Cloud Storage
 
-This is my first web project that include front and back end functionality,it takes about seven days.Implement back-end functions with servlet + js + jsp.
+This is a web project that include front and back end functionality,it takes about seven days.Implement back-end functions with servlet + js + jsp.
 
 ## Content
 
 Here are the content and features:
 
 * Welcome page - rolling parallax,rolling optimization
-* Login & SignUp & ResetPIN - `PBKDF2` encryption, Mailbox verfication, random gradient background
+* Login & SignUp & ResetPIN - `PBKDF2` encryption, Mailbox verfication, Custom pop-ups
 * Main Page - multiple file upload, display by file type
-* Forum - static no backend, Emoji support
+* Forum - Emoji support
 * Request filter - log filter, xss filter
 
 ## Page
