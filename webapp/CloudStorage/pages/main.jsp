@@ -27,6 +27,12 @@
 
 <%
     userID = (Long) session.getAttribute("userID");
+    if(userID == null){
+        response.sendRedirect("login.html");
+        return;
+    }
+    Cookie userIDCookie = new Cookie("userID", userID.toString());
+    userIDCookie.setMaxAge(60*60*24); // Cookie 1 天后过期
     response.addCookie(new Cookie("userID", userID.toString()));
     response.getWriter().println(String.format("<div id='userID' user-id='%s' display='none'></div>", userID));
 
@@ -217,7 +223,7 @@
                 <%! private double storageUsedPercentage; %>
                 <%
                     storageUsedPercentage = user.getUsedStorage() / 1024 / 1024 / user.getStorageQuota() * 100;
-                    System.out.println("storageUsedPercentage: " + storageUsedPercentage + "%");
+                    System.out.println("storageUsedPercentage: " + String.format("%.2f", storageUsedPercentage) + "%");
                 %>
                 <div class="info">存储使用情况：</div>
                 <div class="storage-bar">
@@ -287,7 +293,7 @@
             <div class="size">大小</div>
         </div>
         <div class="dir">
-            <div class="folder document">
+            <div class="folder document" type="system-folder">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="22970">
                     <path
@@ -297,21 +303,21 @@
                 <div class="name">文档</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size"> 0&nbsp;MB</div>
+                <div class="size"> 0&nbsp;B</div>
             </div>
-            <div class="folder image">
+            <div class="folder image" type="system-folder">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="22970">
                     <path
                         d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
                         p-id="22971"></path>
                 </svg>
-                <div class="name">图片</div>
+                <div class="name" type="system-folder">图片</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size"> 0&nbsp;kB</div>
+                <div class="size"> 0&nbsp;B</div>
             </div>
-            <div class="folder music">
+            <div class="folder music" type="system-folder">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="22970">
                     <path
@@ -321,9 +327,9 @@
                 <div class="name">音乐</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size"> 0&nbsp;MB</div>
+                <div class="size"> 0&nbsp;B</div>
             </div>
-            <div class="folder video">
+            <div class="folder video" type="system-folder">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="22970">
                     <path
@@ -333,9 +339,9 @@
                 <div class="name">视频</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size">0&nbsp;MB</div>
+                <div class="size">0&nbsp;B</div>
             </div>
-            <div class="folder other">
+            <div class="folder other" type="system-folder">
                 <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="22970">
                     <path
@@ -345,7 +351,7 @@
                 <div class="name">其他</div>
                 <div class="modify-date">2024年6月19日 12:06</div>
                 <div class="type">系统文件夹</div>
-                <div class="size">0&nbsp;MB</div>
+                <div class="size">0&nbsp;B</div>
             </div>
 
             <%
@@ -353,56 +359,218 @@
                     Map<String, Integer> fileTypeMap = new HashMap<>();
 
                     /*
-                        文档类型：doc, docx, pdf, txt, odt, rtf, wpd, epub, xlsx, xls, xlsm, pptx, ppt, pps
-                        图片类型：jpg, jpeg, png, gif, bmp, tiff, svg, webp
-                        视频类型: mp4, avi mov wmv mkv flv mpg mpeg
-                        音频类型：mp3 ogg wma aac flac m4a
-                        其他类型：zip, rar, 7z, tar, gz, exe等等
+                        文档类型：doc, docx, pdf, txt, odt, rtf, wpd, epub, xlsx, xls, xlsm, pptx, ppt, pps...
+                        图片类型：jpg, jpeg, png, gif, bmp, tiff, svg, webp...
+                        视频类型: mp4, avi mov wmv mkv flv mpg mpeg...
+                        音频类型：mp3 ogg wma aac flac m4a...
+                        压缩文件类型：zip, rar, 7z, tar, gz, bz2, xz...
                      */
 
                     // 文档类型
-                    fileTypeMap.put(".doc", 1);
-                    fileTypeMap.put(".docx", 1);
-                    fileTypeMap.put(".pdf", 1);
-                    fileTypeMap.put(".txt", 1);
-                    fileTypeMap.put(".odt", 1);
-                    fileTypeMap.put(".rtf", 1);
-                    fileTypeMap.put(".wpd", 1);
-                    fileTypeMap.put(".epub", 1);
-                    fileTypeMap.put(".xlsx", 1); // 表格文档
-                    fileTypeMap.put(".xls", 1);
-                    fileTypeMap.put(".xlsm", 1);
-                    fileTypeMap.put(".pptx", 1); // 演示文档
-                    fileTypeMap.put(".ppt", 1);
-                    fileTypeMap.put(".pps", 1);
+                    fileTypeMap.put(".md", 1);    // Markdown
+                    fileTypeMap.put(".doc", 1);   // Microsoft Word
+                    fileTypeMap.put(".docx", 1);  // Microsoft Word
+                    fileTypeMap.put(".pdf", 1);   // Portable Document Format
+                    fileTypeMap.put(".txt", 1);   // Text File
+                    fileTypeMap.put(".odt", 1);   // OpenDocument Text
+                    fileTypeMap.put(".rtf", 1);   // Rich Text Format
+                    fileTypeMap.put(".wpd", 1);   // WordPerfect Document
+                    fileTypeMap.put(".epub", 1);  // Electronic Publication
+                    fileTypeMap.put(".xlsx", 1);  // Microsoft Excel
+                    fileTypeMap.put(".xls", 1);   // Microsoft Excel
+                    fileTypeMap.put(".xlsm", 1);   // Microsoft Excel
+                    fileTypeMap.put(".pptx", 1);  // Microsoft PowerPoint
+                    fileTypeMap.put(".ppt", 1);   // Microsoft PowerPoint
+                    fileTypeMap.put(".pps", 1);   // Microsoft PowerPoint
+                    fileTypeMap.put(".json", 1);  // JSON
+                    fileTypeMap.put(".xml", 1);   // XML
+                    fileTypeMap.put(".csv", 1);   // Comma-Separated Values
+                    fileTypeMap.put(".ini", 1);   // Initialization File
+                    fileTypeMap.put(".yaml", 1);  // YAML
+                    fileTypeMap.put(".log", 1);   // Log File
 
                     // 图片类型
-                    fileTypeMap.put(".jpg", 2);
-                    fileTypeMap.put(".jpeg", 2);
-                    fileTypeMap.put(".png", 2);
-                    fileTypeMap.put(".gif", 2);
-                    fileTypeMap.put(".bmp", 2);
-                    fileTypeMap.put(".tiff", 2);
-                    fileTypeMap.put(".svg", 2);
-                    fileTypeMap.put(".webp", 2);
+                    fileTypeMap.put(".jpg", 2);   // Joint Photographic Experts Group
+                    fileTypeMap.put(".jpeg", 2);   // Joint Photographic Experts Group
+                    fileTypeMap.put(".png", 2);   // Portable Network Graphics
+                    fileTypeMap.put(".gif", 2);   // Graphics Interchange Format
+                    fileTypeMap.put(".bmp", 2);   // Windows Bitmap
+                    fileTypeMap.put(".tiff", 2);   // Tagged Image File Format
+                    fileTypeMap.put(".svg", 2);   // Scalable Vector Graphics
+                    fileTypeMap.put(".webp", 2);   // WebP image format
+                    fileTypeMap.put(".psd", 2);    // Photoshop Document
+                    fileTypeMap.put(".ai", 2);     // Adobe Illustrator
+                    fileTypeMap.put(".eps", 2);    // Encapsulated PostScript
+                    fileTypeMap.put(".raw", 2);    // Raw image format
+                    fileTypeMap.put(".cr2", 2);    // Canon RAW
+                    fileTypeMap.put(".nef", 2);    // Nikon RAW
+                    fileTypeMap.put(".orf", 2);    // Olympus RAW
+                    fileTypeMap.put(".raf", 2);    // Fujifilm RAW
+                    fileTypeMap.put(".dng", 2);    // Adobe DNG
+                    fileTypeMap.put(".heic", 2);   // High Efficiency Image Format
+                    fileTypeMap.put(".hdr", 2);    // High Dynamic Range
+                    fileTypeMap.put(".xcf", 2);    // GIMP image
+                    fileTypeMap.put(".pdn", 2);    // Paint.NET image
+                    fileTypeMap.put(".kra", 2);    // Krita image
+                    fileTypeMap.put(".xbm", 2);    // X Bitmap image
+                    fileTypeMap.put(".jp2", 2);    // JPEG 2000
 
                     // 视频类型
-                    fileTypeMap.put(".mp4", 3);
-                    fileTypeMap.put(".avi", 3);
-                    fileTypeMap.put(".mov", 3);
-                    fileTypeMap.put(".wmv", 3);
-                    fileTypeMap.put(".mkv", 3);
-                    fileTypeMap.put(".flv", 3);
-                    fileTypeMap.put(".mpg", 3);
-                    fileTypeMap.put(".mpeg", 3);
+                    fileTypeMap.put(".mp4", 3);   // MPEG-4 Part 14 Video
+                    fileTypeMap.put(".avi", 3);   // Audio Video Interleave
+                    fileTypeMap.put(".mov", 3);   // Apple QuickTime Movie
+                    fileTypeMap.put(".wmv", 3);   // Windows Media Video
+                    fileTypeMap.put(".mkv", 3);   // Matroska Video
+                    fileTypeMap.put(".flv", 3);    // Flash Video
+                    fileTypeMap.put(".mpg", 3);    // MPEG Video
+                    fileTypeMap.put(".mpeg", 3);   // MPEG Video
+                    fileTypeMap.put(".3gp", 3);    // 3GPP multimedia container format
+                    fileTypeMap.put(".3g2", 3);    // 3GPP2 multimedia container format
+                    fileTypeMap.put(".asf", 3);    // Advanced Systems Format
+                    fileTypeMap.put(".divx", 3);   // DivX Media Format
+                    fileTypeMap.put(".f4v", 3);    // Flash Video
+                    fileTypeMap.put(".m2ts", 3);   // MPEG-2 Transport Stream
+                    fileTypeMap.put(".m4v", 3);    // MPEG-4 Video
+                    fileTypeMap.put(".mk3d", 3);   // MKV 3D video
+                    fileTypeMap.put(".mod", 3);    // JVC MOD file format
+                    fileTypeMap.put(".mts", 3);    // AVCHD video
+                    fileTypeMap.put(".nut", 3);    // NUT multimedia container format
+                    fileTypeMap.put(".ogv", 3);    // Ogg Vorbis Video
+                    fileTypeMap.put(".rm", 3);     // RealMedia
+                    fileTypeMap.put(".rmvb", 3);   // RealMedia Variable Bitrate
+                    fileTypeMap.put(".ts", 3);     // MPEG Transport Stream
+                    fileTypeMap.put(".vob", 3);    // DVD Video Object
+                    fileTypeMap.put(".webm", 3);   // WebM video format
+                    fileTypeMap.put(".xvid", 3);   // Xvid codec
 
                     // 音乐类型
-                    fileTypeMap.put(".mp3", 4);
-                    fileTypeMap.put(".wav", 4);
-                    fileTypeMap.put(".aac", 4);
-                    fileTypeMap.put(".ogg", 4);
-                    fileTypeMap.put(".flac", 4);
-                    fileTypeMap.put(".m4a", 4);
+                    fileTypeMap.put(".mp3", 4);   // MPEG-1 Audio Layer 3
+                    fileTypeMap.put(".wav", 4);   // Waveform Audio File Format
+                    fileTypeMap.put(".aac", 4);    // Advanced Audio Coding
+                    fileTypeMap.put(".ogg", 4);    // Ogg Vorbis audio codec
+                    fileTypeMap.put(".flac", 4);   // Free Lossless Audio Codec
+                    fileTypeMap.put(".m4a", 4);    // MPEG-4 audio
+                    fileTypeMap.put(".aiff", 4);  // Audio Interchange File Format
+                    fileTypeMap.put(".alac", 4);  // Apple Lossless Audio Codec
+                    fileTypeMap.put(".amr", 4);   // Adaptive Multi-Rate Audio
+                    fileTypeMap.put(".ape", 4);   // Monkey's Audio
+                    fileTypeMap.put(".au", 4);    // Sun Microsystems audio file format
+                    fileTypeMap.put(".dff", 4);   // DSDIFF (Digital Stream)
+                    fileTypeMap.put(".dsf", 4);   // DSF (DSD Stream File)
+                    fileTypeMap.put(".iff", 4);   // Interchange File Format
+                    fileTypeMap.put(".kar", 4);   // MIDI Karaoke file
+                    fileTypeMap.put(".mka", 4);   // Matroska Audio
+                    fileTypeMap.put(".opus", 4);  // Opus audio codec
+                    fileTypeMap.put(".qcp", 4);   // Qualcomm PureVoice
+                    fileTypeMap.put(".spx", 4);   // Speex audio codec
+                    fileTypeMap.put(".tta", 4);   // TTA (True Audio)
+                    fileTypeMap.put(".voc", 4);   // Creative Voice
+                    fileTypeMap.put(".vqf", 4);   // TwinVQ (Variable-Rate Multi-Channel)
+                    fileTypeMap.put(".wma", 4);   // Windows Media Audio
+                    fileTypeMap.put(".wv", 4);    // WavPack
+
+                    //压缩文件类型
+                    fileTypeMap.put(".zip", 5);   // ZIP archive format
+                    fileTypeMap.put(".rar", 5);   // RAR archive format
+                    fileTypeMap.put(".7z", 5);    // 7-Zip compressed file format
+                    fileTypeMap.put(".tar", 5);   // Tape Archive
+                    fileTypeMap.put(".gz", 5);    // GZip compressed file format
+                    fileTypeMap.put(".bz2", 5);   // BZip2 compressed file format
+                    fileTypeMap.put(".xz", 5);    // XZ Utils compressed file format
+                    fileTypeMap.put(".z", 5);     // Z-standard compressed file format
+                    fileTypeMap.put(".lzma", 5);  // LZMA compressed file format
+                    fileTypeMap.put(".cab", 5);   // Microsoft Cabinet file format
+                    fileTypeMap.put(".arj", 5);   // ARJ archive format
+                    fileTypeMap.put(".lzh", 5);   // LZMA compressed file format
+                    fileTypeMap.put(".iso", 5);   // ISO 9660 CD-ROM image file format
+                    fileTypeMap.put(".dmg", 5);   // Apple Disk Image
+                    fileTypeMap.put(".pkg", 5);    // Mac OS X Installer Package
+                    fileTypeMap.put(".rpm", 5);    // Red Hat Package Manager
+                    fileTypeMap.put(".deb", 5);    // Debian package format
+                    fileTypeMap.put(".zst", 5);   // Zstandard compressed file format
+                    fileTypeMap.put(".ace", 5);    // ACE archive
+                    fileTypeMap.put(".afa", 5);    // AFA (Advanced Forensic Analysis)
+                    fileTypeMap.put(".alz", 5);    // ALZip archive format
+                    fileTypeMap.put(".arc", 5);    // Archive file format
+                    fileTypeMap.put(".b1", 5);     // B1 archive format
+                    fileTypeMap.put(".b6z", 5);    // B6ZIP archive format
+                    fileTypeMap.put(".cab", 5);    // Microsoft Cabinet file format
+                    fileTypeMap.put(".cfs", 5);    // CFS (Compressed File System)
+                    fileTypeMap.put(".cpio", 5);   // CPIO archive format
+                    fileTypeMap.put(".dar", 5);    // Dar archive format
+                    fileTypeMap.put(".dd", 5);     // Data Domain
+                    fileTypeMap.put(".dgc", 5);    // DGC archive format
+                    fileTypeMap.put(".dmg", 5);    // Apple Disk Image
+                    fileTypeMap.put(".ha", 5);     // HA archive format
+                    fileTypeMap.put(".hki", 5);    // HK Installer
+                    fileTypeMap.put(".ice", 5);    // ICE archive format
+                    fileTypeMap.put(".jar", 5);    // Java Archive
+                    fileTypeMap.put(".lha", 5);    // LHA archive format
+                    fileTypeMap.put(".lzh", 5);    // LZMA compressed file format
+                    fileTypeMap.put(".mar", 5);    // MAR archive format
+                    fileTypeMap.put(".pea", 5);    // PEA archive format
+                    fileTypeMap.put(".pim", 5);    // PIM archive format
+                    fileTypeMap.put(".qda", 5);    // QDA archive format
+                    fileTypeMap.put(".war", 5);    // WAR archive format
+
+                    //C或C++源文件类型
+                    fileTypeMap.put(".c", 6);     // C source file
+                    fileTypeMap.put(".cpp", 6);   // C++ source file
+                    fileTypeMap.put(".h", 6);     // C/C++ header file
+                    fileTypeMap.put(".hpp", 6);   // C++ header file
+
+                    //Java源文件类型
+                    fileTypeMap.put(".java", 7);  // Java source file
+                    fileTypeMap.put(".class", 7); // Java class file
+
+                    //Python源文件类型
+                    fileTypeMap.put(".py", 8);    // Python source file
+                    fileTypeMap.put(".pyc", 8);   // Python byte-compiled file
+                    fileTypeMap.put(".pyo", 8);   // Python optimized file
+
+                    //网页文件类型
+                    fileTypeMap.put(".html", 9);  // HTML document
+                    fileTypeMap.put(".htm", 9);   // HTML document
+                    fileTypeMap.put(".xhtml", 9); // XHTML document
+                    fileTypeMap.put(".css", 9);   // Cascading Style Sheets (CSS)
+                    fileTypeMap.put(".jsp", 9);   // Java Server Pages (JSP)
+                    fileTypeMap.put(".asp", 9);   // Active Server Pages (ASP)
+                    fileTypeMap.put(".aspx", 9);  // Active Server Pages (ASP.NET)
+                    fileTypeMap.put(".php", 9);   // Hypertext Preprocessor (PHP)
+
+                    //javaScript文件类型
+                    fileTypeMap.put(".js", 10);   // JavaScript source file
+                    fileTypeMap.put(".ts", 10);   // TypeScript source file
+
+                    //C#源文件类型
+                    fileTypeMap.put(".cs", 11);   // C# source file
+                    fileTypeMap.put(".csproj", 11); // C# project file
+
+                    //sql文件类型
+                    fileTypeMap.put(".sql", 12);  // SQL script file
+
+                    //其他源代码文件类型
+                    fileTypeMap.put(".go", 13);  // Go source file
+                    fileTypeMap.put(".lua", 13); // Lua source file
+                    fileTypeMap.put(".pl", 13);  // Perl source file
+                    fileTypeMap.put(".rb", 13);  // Ruby source file
+                    fileTypeMap.put(".swift", 13); // Swift source file
+                    fileTypeMap.put(".vb", 13);  // Visual Basic source file
+                    fileTypeMap.put(".vba", 13); // Visual Basic for Applications (VBA) source file
+                    fileTypeMap.put(".f", 13);  // Fortran source file
+                    fileTypeMap.put(".m", 13);  // Matlab source file
+                    fileTypeMap.put(".kt", 13);  // Kotlin source file
+                    fileTypeMap.put(".rs", 13);  // Rust source file
+                    fileTypeMap.put(".dpr", 13);  // Delphi source file
+
+                    //可执行程序或脚本或软件
+                    fileTypeMap.put(".exe", 14);  // Windows executable file
+                    fileTypeMap.put(".bat", 14);  // Windows batch file
+                    fileTypeMap.put(".sh", 14);   // Unix shell script
+                    fileTypeMap.put(".apk", 14);  // Android application package
+                    fileTypeMap.put(".ipa", 14);  // iOS application package
+                    fileTypeMap.put(".app", 14);  // macOS application bundle
+                    fileTypeMap.put(".vbs", 14);  // Windows script file
 
                     StringBuilder sb = new StringBuilder();
 
@@ -463,6 +631,146 @@
                     }
                     videoSvg = sb.toString();
 
+                    String zipSvg = "";
+                    String zipSvgPath = application.getRealPath("/include/zipSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(zipSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    zipSvg = sb.toString();
+
+                    String cSvg = "";
+                    String cSvgPath = application.getRealPath("/include/cSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(cSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    cSvg = sb.toString();
+
+                    String javaSvg = "";
+                    String javaSvgPath = application.getRealPath("/include/javaSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(javaSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    javaSvg = sb.toString();
+
+                    String pythonSvg = "";
+                    String pythonSvgPath = application.getRealPath("/include/pythonSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(pythonSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    pythonSvg = sb.toString();
+
+                    String htmlSvg = "";
+                    String htmlSvgPath = application.getRealPath("/include/htmlSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(htmlSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    htmlSvg = sb.toString();
+
+                    String jsSvg = "";
+                    String jsSvgPath = application.getRealPath("/include/jsSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(jsSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    jsSvg = sb.toString();
+
+                    String cSharpSvg = "";
+                    String cSharpSvgPath = application.getRealPath("/include/C#Svg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(cSharpSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    cSharpSvg = sb.toString();
+
+                    String sqlSvg = "";
+                    String sqlSvgPath = application.getRealPath("/include/sqlSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(sqlSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    sqlSvg = sb.toString();
+
+                    String srcSvg = "";
+                    String srcSvgPath = application.getRealPath("/include/srcSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(srcSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    srcSvg = sb.toString();
+
+                    String exeSvg = "";
+                    String exeSvgPath = application.getRealPath("/include/exeSvg.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(exeSvgPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    exeSvg = sb.toString();
+
                     String otherSvg = "";
                     String otherSvgPath = application.getRealPath("/include/otherSvg.html");
                     sb.setLength(0);
@@ -476,6 +784,20 @@
                         e.printStackTrace();
                     }
                     otherSvg = sb.toString();
+
+                    String downloadDiv = "";
+                    String downloadDivPath = application.getRealPath("/include/downloadDiv.html");
+                    sb.setLength(0);
+                    try (BufferedReader br = new BufferedReader(new FileReader(downloadDivPath))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    downloadDiv = sb.toString();
 
                     String deleteDiv = "";
                     String deleteDivPath = application.getRealPath("/include/deleteDiv.html");
@@ -513,10 +835,8 @@
                         String fileType = rs.getString("file_type");
                         java.sql.Timestamp modifyTime = rs.getTimestamp("modify_time");
 
-                        System.out.println("fileName: " + fileName + ", fileType: " + fileType + ", fileSize: " + fileSize + ", modifyTime: " + modifyTime);
-
                         sb.setLength(0);
-                        sb.append("<div class=\"file\">");
+                        sb.append(String.format("<div class=\"file\" file-name=\"%s\" file-id=\"%s\">", fileName, rs.getLong("file_id")));
 
                         //添加svg
                         if(fileTypeMap.get(fileType) == null){
@@ -540,6 +860,56 @@
                                     break;
                                 }
 
+                                case 5:{
+                                    sb.append(zipSvg);
+                                    break;
+                                }
+
+                                case 6:{
+                                    sb.append(cSvg);
+                                    break;
+                                }
+
+                                case 7:{
+                                    sb.append(javaSvg);
+                                    break;
+                                }
+
+                                case 8:{
+                                    sb.append(pythonSvg);
+                                    break;
+                                }
+
+                                case 9:{
+                                    sb.append(htmlSvg);
+                                    break;
+                                }
+
+                                case 10:{
+                                    sb.append(jsSvg);
+                                    break;
+                                }
+
+                                case 11:{
+                                    sb.append(cSharpSvg);
+                                    break;
+                                }
+
+                                case 12:{
+                                    sb.append(sqlSvg);
+                                    break;
+                                }
+
+                                case 13:{
+                                    sb.append(srcSvg);
+                                    break;
+                                }
+
+                                case 14:{
+                                    sb.append(exeSvg);
+                                    break;
+                                }
+
                                 default:{
                                     sb.append(otherSvg);
                                     break;
@@ -558,6 +928,9 @@
 
                         //添加文件大小
                         sb.append(String.format("<div class=\"size\">%s</div>", fileSize));
+
+                        //添加下载按钮
+                        sb.append(downloadDiv);
 
                         //添加删除按钮
                         sb.append(deleteDiv);

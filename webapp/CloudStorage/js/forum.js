@@ -42,7 +42,7 @@ document.getElementById('commentForm').addEventListener('submit', function (even
 // 获取表情窗口和按钮的DOM元素
 const emojiButton = document.getElementById('emojiButton');
 const emojiWindow = document.getElementById('emojiWindow');
-
+ 
 // 插入表情到评论文本区域的函数
 function insertEmoji(emoji) {
     const commentTextarea = document.getElementById('commentContent');

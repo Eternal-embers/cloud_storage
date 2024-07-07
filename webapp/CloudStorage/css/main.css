@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 * {
     padding: 0;
     margin: 0;
@@ -174,29 +176,30 @@ svg {
 
 #search-input {
     width: 30vw;
-    padding: 0.8vw 1vw;
+    padding: 1.2vh 1vw;
     padding-right: 4.5vw;
     border: 1px solid #30363d;
-    border-radius: 10vw;
-    box-shadow: 5px 5px 10px rgba(255, 255, 255, 0.3);
+    border-radius: 6vh;
+    border-radius: 6vh;
     background-color: #161b22;
     color: rgba(255, 255, 255, 0.5);
+    font-size: 1em;
+    letter-spacing: 0.1em;
     outline: none;
 }
 
 #search-input::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.2);
 }
 
 #search-input:hover {
-    background-color: rgb(40, 42, 51);
-    border-color: transparent;
-    transition: background-color ease-out 0.5s;
+    border-color: #8d96a0;
 }
 
 #search-input:focus {
-    border: 1px solid #8d96a0;;
-    box-shadow: 0px 0px 15px rgba(255, 255, 255);
+    border-color: #00a1d6;
+    border-radius: 1vh;
+    transition: all ease-in-out 0.3s;
 }
 
 /* 隐藏浏览器自带的删除按钮 */
@@ -212,12 +215,12 @@ input[type="search"]::-webkit-search-cancel-button {
     margin-right: 1vw;
     width: 1.5vw;
     height: 1.5vw;
-    fill: rgba(255, 255, 255, 0.3);
+    fill: #30363d;
     cursor: pointer;
 }
 
 .search-icon:hover {
-    fill: rgba(255, 255, 255, 0.5);
+    fill: #00a1d6;
 }
 
 .search-clear {
@@ -226,7 +229,6 @@ input[type="search"]::-webkit-search-cancel-button {
     top: 50%;
     width: 1vw;
     height: 1vw;
-    color: #8d96a0;
     text-align: center;
     font-size: 1em;
     transform: translateY(-50%);
@@ -235,6 +237,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .clear-icon {
+    fill: #667485;
     width: 1vw;
     height: 1vw;
 }
@@ -381,14 +384,22 @@ input[type="search"]::-webkit-search-cancel-button {
     cursor: pointer;
     column-gap: 0.5vw;
     margin: 2vh;
-    padding: 0.5vh 2vw;
-    border: 1px solid #30363d;
+    padding: 0.8vh 2vw;
+    border: 1px solid #42484f;
     border-radius: 1vw;
     cursor: pointer;
 }
 
 #logout:hover {
-    background: #aa5550;
+    background-color: #f76666;
+}
+
+#logout:hover .info{
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#logout:hover .logout-icon {
+    fill: rgba(255, 255, 255, 0.7);
 }
 
 #logout .info {
@@ -468,9 +479,21 @@ input[type="search"]::-webkit-search-cancel-button {
     justify-content: start;
     align-items: center;
     padding: 1vh 1vw;
+
+    /* 禁用选中 */
+    -webkit-user-select: none !important;/* Safari */
+    -moz-user-select: none !important;/* Firefox */
+    -ms-user-select: none !important;/* IE/Edge */
+    user-select: none !important;/* 标准语法 */
 }
 
-.folder:hover {
+.selected {
+    border: 1px solid rgba(0, 150, 255, 0.3) !important;
+    background-color: rgba(0, 150, 255, 0.1) !important;
+}
+
+.folder:hover,
+.file:hover {
     border: 1px solid #30363d;
 }
 
@@ -483,6 +506,9 @@ input[type="search"]::-webkit-search-cancel-button {
 .dir .name {
     width: 30vw;
     padding: 1vh 1vw;
+    white-space: nowrap; /* 保持一行显示 */
+    overflow: hidden;     /* 溢出隐藏 */
+    text-overflow: ellipsis; /* 显示省略号 */
 }
 
 .dir .modify-date {
@@ -500,14 +526,33 @@ input[type="search"]::-webkit-search-cancel-button {
     padding: 1vh 2.5vw;
 }
 
-.dir .delete{
-    margin-left: 5vw;
+.dir .download,
+.dir .delete {
+    cursor: pointer;
+}
+
+.dir .download {
+    margin-left: 2vw;
     padding: 0.5vh;
 }
 
-.delete-icon {
+.download-icon {
     wid1th: 1.5vw;
     height: 1.5vw;
+}
+
+.download:hover .download-icon {
+    fill: #009900;
+}
+
+.dir .delete{
+    margin-left: 0.5vw;
+    padding: 0.5vh;
+}
+
+.delete-icon{
+    width: 1.2vw;
+    height: 1.2vw;
 }
 
 .delete:hover .delete-icon {
@@ -599,7 +644,9 @@ input[type="search"]::-webkit-search-cancel-button {
     width: 80%;
     border: 1px solid #30363d;
     padding: 0.8vh 1vw;
-    overflow: auto;
+    white-space: nowrap; /* 保持一行显示 */
+    overflow: hidden;     /* 溢出隐藏 */
+    text-overflow: ellipsis; /* 显示省略号 */
 }
 
 #files-list #clear {

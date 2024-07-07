@@ -133,15 +133,72 @@ document.getElementById('clear').addEventListener('click', function () {
         document.getElementById('files-list').style.display = 'none';
 });
 
+//下载文件
+function downloadFile() {
+    // 找到.download元素的父节点，即包含文件信息的div
+    const fileContainer = event.target.closest('.file');
+
+    // 假设userID存储在页面的某个元素中，例如一个隐藏的input元素
+    const userIdElement = document.getElementById('userID');
+    const userID = userIdElement ? userIdElement.getAttribute('user-id') : null;
+
+    // 检查userID是否存在
+    if (!userID) {
+        console.error('User ID not found.');
+        alert('用户似乎已经退出，请重新登录.');
+        return;
+    }
+
+    // 从父节点属性中获取文件名
+    const fileName = fileContainer.getAttribute('file-name');
+
+    //从父节点属性中获取文件id
+    const fileID = fileContainer.getAttribute('file-id');
+
+    // 构建请求体
+    const requestBody = {
+        fileName: fileName,
+        userID: userID
+    };
+
+    let url = 'downloadFile?' + "user_id=" + userID + "&file_id=" + fileID;
+
+     fetch(url)
+        .then(response => {
+          if (response.ok) {
+              return response.blob();
+          }else if (response.status === 401){
+                alert('用户似乎已经退出，请重新登录.');
+          } else if(response.status === 404){
+                alert('文件 \"' + fileName + '\" 不存在！');
+          } else if(response.status == 500){
+                alert('服务器内部错误！');
+          }
+          else {
+                throw new Error('Network response was not ok');
+          }
+        })
+        .then(blob => {
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = fileName; // 设置下载文件名
+          document.body.appendChild(link);
+          link.click(); // 触发下载
+          document.body.removeChild(link); // 清理DOM
+          URL.revokeObjectURL(downloadUrl); // 释放blob URL
+          console.log("下载文件\"" + fileName + "\"成功！")
+        })
+        .catch(e => console.error('Download error:', e));
+}
+
+
 //删除文件
 function deleteFile() {
       // 找到.delete元素的父节点，即包含文件信息的div
       const fileContainer = event.target.closest('.file');
 
       console.log('删除文件:', fileContainer);
-
-      // 从父节点中获取文件名
-      const fileName = fileContainer.querySelector('.name').textContent;
 
       // 假设userID存储在页面的某个元素中，例如一个隐藏的input元素
       const userIdElement = document.getElementById('userID');
@@ -154,13 +211,19 @@ function deleteFile() {
         return;
       }
 
+      // 从父节点属性中获取文件名
+      const fileName = fileContainer.getAttribute('file-name');
+
+      //从父节点属性中获取文件id
+      const fileID = fileContainer.getAttribute('file-id');
+
       // 构建请求体
       const requestBody = {
         fileName: fileName,
         userID: userID
       };
 
-      let url = 'deleteFile?' + "user_id=" + userID + "&file_name=" + fileName;
+      let url = 'deleteFile?' + "user_id=" + userID + "&file_id=" + fileID;
 
 
       // 发送请求到服务器删除文件
@@ -196,3 +259,67 @@ function deleteFile() {
       });
 }
 
+/* Ctrl多选文件功能 */
+const dir = document.querySelector('.dir');
+
+// 为文件容器添加点击事件监听器
+dir.addEventListener('click', function (event) {
+    // 检查是否按住Ctrl键
+    if (!event.ctrlKey) return;
+
+    // 使用 event.target 来获取实际被点击的元素
+    // 检查这个元素或其父元素是否是文件元素
+    let target = event.target;
+    while (target && target !== this) {
+        if (target.matches('.file')) {
+            // 如果找到 .file 元素，切换 .selected 类
+            target.classList.toggle('selected');
+            break;
+        }
+        target = target.parentElement;
+    }
+});
+
+/* shift多选文件功能 */
+let startFile = null;
+
+// 监听文件元素容器的点击事件
+dir.addEventListener('click', function (event) {
+    const file = event.target.closest('.file');
+
+    // 如果点击的不是文件元素或者未按住shift键，则直接返回
+    if (!event.shiftKey) return;
+
+    // 如果已经记录了起始文件元素
+    if (startFile) {
+        // 取消之前所有文件的选中状态
+        document.querySelectorAll('.file.selected').forEach(function (el) {
+            el.classList.remove('selected');
+        });
+
+        // 选择起始文件到当前文件之间的所有文件
+        const files = document.querySelectorAll('.file');
+        let startIndex = Array.prototype.indexOf.call(files, startFile);
+        let endIndex = Array.prototype.indexOf.call(files, file);
+
+        for (let i = Math.min(startIndex, endIndex); i <= Math.max(startIndex, endIndex); i++) {
+            files[i].classList.add('selected');
+        }
+    } else {
+        // 如果没有按下Shift键，只选中当前点击的文件
+        if (startFile != null) startFile.classList.remove('selected');
+        file.classList.add('selected');
+        startFile = file;
+    }
+});
+
+//清除选中
+dir.addEventListener('click', function (event) {
+    if (!event.ctrlKey && !event.shiftKey) {
+        // 取消之前所有文件的选中状态
+        document.querySelectorAll('.file.selected').forEach(function (el) {
+            el.classList.remove('selected');
+        });
+        startFile = null;//清除起始文件
+    }
+});
