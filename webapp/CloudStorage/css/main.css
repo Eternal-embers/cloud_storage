@@ -497,6 +497,10 @@ input[type="search"]::-webkit-search-cancel-button {
     border: 1px solid #30363d;
 }
 
+.edit {
+    border: none !important;
+}
+
 .folder-icon,
 .file-icon {
     width: 1.5vw;
@@ -504,11 +508,41 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .dir .name {
+    position: relative;
     width: 30vw;
+    min-height: 4vh;
     padding: 1vh 1vw;
     white-space: nowrap; /* 保持一行显示 */
     overflow: hidden;     /* 溢出隐藏 */
     text-overflow: ellipsis; /* 显示省略号 */
+}
+
+.name-input {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 25vw;
+    height: 4vh;
+    transform: translateY(-50%);
+    margin: 0 1vw;
+    padding: 0.5vh 1vw;
+    outline: none;
+    font-size: 1em;
+    border: 1px solid #30363d;
+    background-color: transparent;
+    z-index: 2;
+    pointer-events: none;
+    cursor: text;
+}
+
+.name-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 1em;
+}
+
+.name-input:focus,
+.name-input:active {
+    box-shadow: 1px 1px 5px rgba(255, 255, 255, 0.2);
 }
 
 .dir .modify-date {

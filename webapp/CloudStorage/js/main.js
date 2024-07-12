@@ -323,3 +323,133 @@ dir.addEventListener('click', function (event) {
         startFile = null;//清除起始文件
     }
 });
+
+//修改用户文件夹名称
+var inputElement = document.createElement('input');//创建input元素
+inputElement.classList.add('name-input');
+inputElement.type = 'text';
+inputElement.placeholder = '请输入文件夹名称';
+
+// 为所有具有'name'类的元素添加点击事件监听器
+let userFolder = dir.querySelectorAll('.folder[type=user-folder]');
+userFolder.forEach(function (e) {
+    let folderNameElement = e.querySelector('.name');
+    folderNameElement.addEventListener('click', function (event) {
+        e.classList.add("edit");
+        var folderNameElement = event.target.closest('.name');
+        var originalName = folderNameElement.textContent; // 保存原始名称
+
+        inputElement.value = originalName; // 设置输入框的初始值为原始名称
+
+        folderNameElement.innerHTML = ''; // 清空原有内容
+        folderNameElement.appendChild(inputElement); // 添加input元素到父元素中
+        inputElement.focus(); // 聚焦到input元素
+
+        inputElement.onblur = function () {
+            // 当输入框失去焦点时执行
+            var newName = this.value.trim(); // 去除字符串两端的空格
+
+            if (newName === '') {
+                // 如果去除空格后输入框中没有内容，恢复原始名称
+                folderNameElement.textContent = originalName;
+            } else {
+                // 如果去除空格后输入框中有内容，更新名称
+                folderNameElement.textContent = newName;
+            }
+
+            e.classList.remove("edit");
+
+        };
+
+        inputElement.onkeydown = function (e) {
+            // 监听键盘事件，当按下回车键时提交更改
+            if (e.key === 'Enter') {
+                this.blur(); // 使input失去焦点，触发onblur事件
+            }
+        };
+    });
+});
+
+//获取最后一个用户文件夹
+var otherFolder = dir.querySelector('.other');
+var allUserFolders = dir.querySelectorAll('.folder[type="user-folder"]');
+var lastUserFolder = allUserFolders.length > 0 ? allUserFolders[allUserFolders.length - 1] : otherFolder;
+
+//点击新建按钮创建用户文件夹
+const createDir = document.querySelector('.create-dir');
+createDir.addEventListener('click', function () {
+    //创建新的文件夹元素
+    const newFolder = document.createElement('div');
+    newFolder.classList.add('folder');
+    newFolder.setAttribute('type', 'user-folder');
+    newFolder.innerHTML = `
+    <svg t="1718768286042" class="folder-icon" viewBox="0 0 1024 1024" version="1.1"
+        xmlns="http://www.w3.org/2000/svg" p-id="22970">
+        <path
+            d="M81.16 412.073333L0 709.653333V138.666667a53.393333 53.393333 0 0 1 53.333333-53.333334h253.413334a52.986667 52.986667 0 0 1 37.713333 15.62l109.253333 109.253334a10.573333 10.573333 0 0 0 7.54 3.126666H842.666667a53.393333 53.393333 0 0 1 53.333333 53.333334v74.666666H173.773333a96.2 96.2 0 0 0-92.613333 70.74z m922-7.113333a52.933333 52.933333 0 0 0-42.386667-20.96H173.773333a53.453333 53.453333 0 0 0-51.453333 39.333333L11.773333 828.666667a53.333333 53.333333 0 0 0 51.453334 67.333333h787a53.453333 53.453333 0 0 0 51.453333-39.333333l110.546667-405.333334a52.953333 52.953333 0 0 0-9.073334-46.373333z"
+            p-id="22971"></path>
+    </svg>
+    <div class="name">新建文件夹</div>
+    <div class="modify-date">${getFormattedDate()}</div>
+    <div class="type">用户文件夹</div>
+    <div class="size"> 0&nbsp;B</div>`;
+
+    lastUserFolder.insertAdjacentElement('afterend', newFolder);
+    lastUserFolder = newFolder;
+
+    //滚动到newFolder处
+    newFolder.scrollIntoView({ behavior: 'smooth' });
+
+    var folderNameElement = newFolder.querySelector('.name');
+    editFolderName();
+
+    //添加允许修改文件夹名称的功能
+    folderNameElement.addEventListener('click', editFolderName);
+
+    function editFolderName() {
+        newFolder.classList.add('edit');
+
+        var originalName = folderNameElement.textContent;
+        inputElement.value = originalName; // 设置输入框的初始值为原始名称
+
+        folderNameElement.innerHTML = ''; // 清空原有内容
+        folderNameElement.appendChild(inputElement); // 添加input元素到父元素中
+        inputElement.focus(); // 聚焦到input元素
+
+        inputElement.onblur = function () {
+            // 当输入框失去焦点时执行
+            var newName = this.value.trim(); // 去除字符串两端的空格
+
+            if (newName === '') {
+                // 如果去除空格后输入框中没有内容，恢复原始名称
+                folderNameElement.textContent = originalName;
+            } else {
+                // 如果去除空格后输入框中有内容，更新名称
+                folderNameElement.textContent = newName;
+            }
+
+            newFolder.classList.remove("edit");
+
+        };
+
+        inputElement.onkeydown = function (e) {
+            // 监听键盘事件，当按下回车键时提交更改
+            if (e.key === 'Enter') {
+                this.blur(); // 使input失去焦点，触发onblur事件
+            }
+        };
+    }
+});
+
+//获取创建日期
+function getFormattedDate() {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = (date.getMonth() + 1).toString(); // 月份从0开始，所以需要加1
+    var day = date.getDate().toString();
+    var hours = date.getHours().toString();
+    var minutes = date.getMinutes().toString();
+    var seconds = date.getSeconds().toString();
+
+    return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
+};
