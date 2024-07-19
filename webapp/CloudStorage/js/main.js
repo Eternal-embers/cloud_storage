@@ -292,6 +292,30 @@ dir.addEventListener('click', function (event) {
         if (target.matches('.file')) {
             // 如果找到 .file 元素，切换 .selected 类
             target.classList.toggle('selected');
+
+            //为.selected元素添加监听
+            contextMenu = document.getElementById('context-menu');
+            target.addEventListener('contextmenu', function (e) {
+                e.preventDefault();//阻止默认的右键菜单显示
+
+                //计算菜单的显示位置
+                let x = e.clientX;
+                let y = e.clientY;
+                contextMenu.style.left = x + 'px';
+                contextMenu.style.top = y + 'px';
+                contextMenu.style.display = 'flex';
+
+                // 监听鼠标点击或按 Esc 键关闭菜单
+                document.addEventListener('click', function () {
+                    contextMenu.style.display = 'none';
+                }, { once: true });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        contextMenu.style.display = 'none';
+                    }
+                }, { once: true });
+            });
+
             break;
         }
         target = target.parentElement;
@@ -322,6 +346,29 @@ dir.addEventListener('click', function (event) {
 
         for (let i = Math.min(startIndex, endIndex); i <= Math.max(startIndex, endIndex); i++) {
             files[i].classList.add('selected');
+
+            //为.selected元素添加监听
+            let contextMenu = document.getElementById('context-menu');
+            files[i].addEventListener('contextmenu', function (e) {
+                e.preventDefault();//阻止默认的右键菜单显示
+
+                //计算菜单的显示位置
+                let x = e.clientX;
+                let y = e.clientY;
+                contextMenu.style.left = x + 'px';
+                contextMenu.style.top = y + 'px';
+                contextMenu.style.display = 'flex';
+
+                // 监听鼠标点击或按 Esc 键关闭菜单
+                document.addEventListener('click', function () {
+                    contextMenu.style.display = 'none';
+                }, { once: true });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        contextMenu.style.display = 'none';
+                    }
+                }, { once: true });
+            });
         }
     } else {
         // 如果没有按下Shift键，只选中当前点击的文件
@@ -330,6 +377,22 @@ dir.addEventListener('click', function (event) {
         startFile = file;
     }
 });
+
+//下载所有已选项
+function downloadSelected() {
+    let selectedDownloadTasks = document.querySelectorAll('.selected .download');
+    selectedDownloadTasks.forEach((e) => {
+        e.click();//点击下载按钮触发下载任务
+    });
+}
+
+//删除所有已选项
+function deleteSelected() {
+    let selectedDeleteTasks = document.querySelectorAll('.selected .delete');
+    selectedDeleteTasks.forEach((e) => {
+        e.click();//点击删除按钮触发删除任务
+    });
+}
 
 //清除选中
 dir.addEventListener('click', function (event) {
