@@ -978,6 +978,7 @@
                     <span>上传文件至云盘，请选择文件或文件夹</span>
                 </div>
                 <input type="file" id="upload-input" name="file[]" multiple="multiple" />
+                <input type="text" id="ignore-files" name="ignore-files" value="" style="display: none;" />
             </div>
 
             <div id="submit" style="display: none;">

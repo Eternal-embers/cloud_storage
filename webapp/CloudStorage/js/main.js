@@ -100,6 +100,9 @@ document.querySelector('.change-password').addEventListener('click', function() 
 
 //文件上传
 document.addEventListener('DOMContentLoaded', function () {
+    let filesContent = document.querySelector('.files-content');//获取文件列表块
+    let ignoreFilesInput = document.getElementById('ignore-files');//忽略的文件的索引
+    let ignoreFiles = []; // 存储需要忽略的文件的索引
     document.getElementById('select').addEventListener('change', function (event) {
         let files = event.target.files;
 
@@ -108,15 +111,30 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('select').style.display = 'none'; //隐藏上传组件
         document.getElementById('submit').style.display = 'block';//显示提交组件
 
-
-        let filesContent = document.querySelector('.files-content');//获取文件列表块
         filesContent.innerHTML = '';//清空文件列表
 
+        let deleteSvg = `<svg t="1721363268007" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="11631"><path d="M851.416 217.84l-45.256-45.248L512 466.744l-294.152-294.16-45.256 45.256L466.744 512l-294.152 294.16 45.248 45.256L512 557.256l294.16 294.16 45.256-45.256L557.256 512z" p-id="11632"></path></svg>`;
+
         for (var i = 0; i < files.length; i++) {
-            var fileItem = document.createElement('div');
+            let fileItem = document.createElement('div');
             fileItem.className = 'file-item';
-            fileItem.textContent = files[i].name;
+            fileItem.innerHTML = `<div class="file-name">${files[i].name}</div><div class="file-delete" data-index="${i}">${deleteSvg}</div>`;
             filesContent.appendChild(fileItem);
+
+            //添加删除文件项的监听
+            fileItem.querySelector('.file-delete').addEventListener('click', function () {
+                let fileItem = this.closest('.file-item');
+                let index = parseInt(this.dataset.index, 10); // 获取文件索引
+                if (fileItem) {
+                    //将文件索引添加到忽略列表
+                    ignoreFiles.push(index);
+
+                    ignoreFilesInput.value = ignoreFiles.join(' ');
+
+                    // 从DOM中移除对应的文件项
+                    filesContent.removeChild(fileItem);
+                }
+            });
         }
 
         document.getElementById('files-list').style.display = 'block';//显示选择的文件列表
@@ -334,6 +352,7 @@ inputElement.placeholder = '请输入文件夹名称';
 let userFolder = dir.querySelectorAll('.folder[type=user-folder]');
 userFolder.forEach(function (e) {
     let folderNameElement = e.querySelector('.name');
+    let folderModifyTime = e.querySelector('.modify-date');
     folderNameElement.addEventListener('click', function (event) {
         e.classList.add("edit");
         var folderNameElement = event.target.closest('.name');
@@ -355,6 +374,9 @@ userFolder.forEach(function (e) {
             } else {
                 // 如果去除空格后输入框中有内容，更新名称
                 folderNameElement.textContent = newName;
+
+                //更新文件夹的修改日期
+                folderModifyTime.textContent = getFormattedDate();
             }
 
             e.classList.remove("edit");
@@ -400,7 +422,8 @@ createDir.addEventListener('click', function () {
     //滚动到newFolder处
     newFolder.scrollIntoView({ behavior: 'smooth' });
 
-    var folderNameElement = newFolder.querySelector('.name');
+    let folderNameElement = newFolder.querySelector('.name');
+    let folderModifyTime = newFolder.querySelector('.modify-date');
     editFolderName();
 
     //添加允许修改文件夹名称的功能
@@ -426,6 +449,9 @@ createDir.addEventListener('click', function () {
             } else {
                 // 如果去除空格后输入框中有内容，更新名称
                 folderNameElement.textContent = newName;
+
+                 //更新文件夹的修改日期
+                 folderModifyTime.textContent = getFormattedDate();
             }
 
             newFolder.classList.remove("edit");
@@ -449,7 +475,7 @@ function getFormattedDate() {
     var day = date.getDate().toString();
     var hours = date.getHours().toString();
     var minutes = date.getMinutes().toString();
-    var seconds = date.getSeconds().toString();
+    var seconds = date.getSeconds().toString().padStart(2, '0');
 
     return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
 };

@@ -675,12 +675,39 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .file-item {
+    display: flex;
+    justify-content: center;
+    align-content: center;
     width: 80%;
     border: 1px solid #30363d;
     padding: 0.8vh 1vw;
     white-space: nowrap; /* 保持一行显示 */
     overflow: hidden;     /* 溢出隐藏 */
     text-overflow: ellipsis; /* 显示省略号 */
+}
+
+.file-name {
+    width: 100%;
+    font-size: 1em;
+}
+
+.file-delete {
+    width: 1vw;
+    height: 1vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.file-delete svg {
+    fill: #8d96a0;
+    width: 1vw;
+    height: 1vw;
+}
+
+.file-delete svg:hover {
+    opacity: 0.6;
 }
 
 #files-list #clear {
@@ -703,6 +730,6 @@ input[type="search"]::-webkit-search-cancel-button {
     opacity: 0.6;
 }
 
-#clear-icon {
+.clear-icon {
     margin-right: 0.5vw;
 }
