@@ -184,21 +184,21 @@ svg {
     background-color: #161b22;
     color: rgba(255, 255, 255, 0.5);
     font-size: 1em;
-    letter-spacing: 0.1em;
+    letter-spacing: 1px;
     outline: none;
 }
 
 #search-input::placeholder {
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.3);
 }
 
 #search-input:hover {
-    border-color: #8d96a0;
+    border-color: #4493f8;
 }
 
 #search-input:focus {
-    border-color: #00a1d6;
-    border-radius: 1vh;
+    border-color:  #4493f8;
+    border-radius: 0.5vw;
     transition: all ease-in-out 0.3s;
 }
 
@@ -215,7 +215,7 @@ input[type="search"]::-webkit-search-cancel-button {
     margin-right: 1vw;
     width: 1.5vw;
     height: 1.5vw;
-    fill: #30363d;
+    fill: rgba(255, 255, 255, 0.3);
     cursor: pointer;
 }
 
@@ -325,13 +325,16 @@ input[type="search"]::-webkit-search-cancel-button {
     display: flex;
     justify-content: center;
     align-content: center;
+    background-color: #21262d;
+    border-radius: 0.5vh;
     cursor: pointer;
     padding: 1vh 1vw;
+    box-shadow: 5px 5px 10px rgba(255, 255, 255, 0.1);
 }
 
 .change-password:hover {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 5px 5px 10px rgba(255, 255, 255, 0.3);
+    opacity: 0.8;
+    box-shadow: -5px -5px 10px rgba(255, 255, 255, 0.1);
 }
 
 .change-password .password-icon {
@@ -385,9 +388,10 @@ input[type="search"]::-webkit-search-cancel-button {
     column-gap: 0.5vw;
     margin: 2vh;
     padding: 0.8vh 2vw;
-    border: 1px solid #42484f;
+    background-color: #21262d;
     border-radius: 1vw;
     cursor: pointer;
+    transition: background-color ease-out 0.5s;
 }
 
 #logout:hover {
@@ -411,9 +415,114 @@ input[type="search"]::-webkit-search-cancel-button {
     height: 1vw;
 }
 
+/* 工具栏 */
+.toolbar {
+    position: relative;
+    left: 50%;
+    width: 85%;
+    transform: translateX(-50%);
+    margin-top: 5vh;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    border: 1px solid #30363d;
+    border-bottom: none;
+    z-index: 1;
+}
+
+.tool-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 8vw;
+    padding: 1vh;
+    border-right: 0.5px solid #30363d;
+    cursor: pointer;
+    transition: background-color ease-out 0.5s;
+}
+
+.tool-option:hover {
+    background-color: #21262d;
+    opacity: 0.8;
+}
+
+.toolbar svg {
+    width: 1vw;
+    height: 1vw;
+    margin-right: 0.5vw;
+}
+
+.on {
+    background-color: #21262d;
+    opacity: 1;
+}
+
+.on svg {
+    fill: #4493f8;
+}
+
+.on span {
+    color: #4493f8;
+}
+
+#sort {
+    position: relative;
+}
+
+#sort:hover {
+    opacity: 1;
+}
+
+#sort:hover .mode-menu {
+    display: block;
+}
+
+/* 排序工具的排序方式菜单 */
+.mode-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    padding-top: 2vh;
+}
+
+.mode-content {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid #30363d;
+    box-shadow: 5px 5px 15px rgba(255, 255, 255, 0.1);
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.mode-content li {
+    width: 8vw;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #30363d;
+}
+
+.mode-content li:last-child {
+    border-bottom: none;
+}
+
+.mode-content li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 0.8;
+}
+
+.mode-selected {
+    color: #4493f8;
+}
+
 .storage-content {
     position: relative;
-    top: 5vh;
     left: 50%;
     transform: translateX(-50%);
     display: flex;

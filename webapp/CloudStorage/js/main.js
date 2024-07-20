@@ -98,6 +98,44 @@ document.querySelector('.change-password').addEventListener('click', function() 
     window.open('reset.html', '_self');
 });
 
+//工具栏选项的开启与关闭
+let toolOption = document.querySelectorAll('.tool-option');
+toolOption.forEach((option) => {
+    if (option.id == 'sort') return;
+
+    option.addEventListener('click', function () {
+        let on = option.classList.contains('on');
+
+        //移除所有开启的功能
+        let enabled = document.querySelectorAll('.on');
+        enabled.forEach((e) => {
+            if (e.id == 'sort') return;
+            e.classList.remove('on');
+        })
+
+        if (!on) option.classList.add('on');
+    });
+})
+
+//对选中的排序方式进行高亮显示
+var sortTool = document.getElementById('sort');
+let modeSelected = null;
+let modeOptions = sortTool.querySelectorAll('.mode-content li');
+modeOptions.forEach((e) => {
+    e.addEventListener('click', function () {
+        if (modeSelected != e) {
+            if (modeSelected != null) modeSelected.classList.remove('mode-selected');
+            modeSelected = e;
+            e.classList.add('mode-selected');
+            sortTool.classList.add('on');
+        } else {
+            modeSelected = null;
+            e.classList.remove('mode-selected');
+            sortTool.classList.remove('on');
+        }
+    })
+})
+
 //文件上传
 document.addEventListener('DOMContentLoaded', function () {
     let filesContent = document.querySelector('.files-content');//获取文件列表块
@@ -300,7 +338,7 @@ dir.addEventListener('click', function (event) {
 
                 //计算菜单的显示位置
                 let x = e.clientX;
-                let y = e.clientY;
+                let y = e.clientY + window.scrollY;
                 contextMenu.style.left = x + 'px';
                 contextMenu.style.top = y + 'px';
                 contextMenu.style.display = 'flex';
@@ -354,7 +392,7 @@ dir.addEventListener('click', function (event) {
 
                 //计算菜单的显示位置
                 let x = e.clientX;
-                let y = e.clientY;
+                let y = e.clientY + window.scrollY;
                 contextMenu.style.left = x + 'px';
                 contextMenu.style.top = y + 'px';
                 contextMenu.style.display = 'flex';
