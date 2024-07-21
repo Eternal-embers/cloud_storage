@@ -317,11 +317,18 @@ function deleteFile() {
 
 /* Ctrl多选文件功能 */
 const dir = document.querySelector('.dir');
+var ctrlMode = false;
+
+//开启或关闭文件多选模式
+document.getElementById('ctrl').addEventListener('click', function () {
+    if (!ctrlMode) ctrlMode = true;
+    else ctrlMode = false;
+});
 
 // 为文件容器添加点击事件监听器
 dir.addEventListener('click', function (event) {
     // 检查是否按住Ctrl键
-    if (!event.ctrlKey) return;
+    if (!event.ctrlKey && !ctrlMode) return;
 
     // 使用 event.target 来获取实际被点击的元素
     // 检查这个元素或其父元素是否是文件元素
@@ -336,8 +343,10 @@ dir.addEventListener('click', function (event) {
             target.addEventListener('contextmenu', function (e) {
                 e.preventDefault();//阻止默认的右键菜单显示
 
+                if (!target.classList.contains('selected')) return;
+
                 //计算菜单的显示位置
-                let x = e.clientX;
+                let x = e.clientX + window.scrollX;
                 let y = e.clientY + window.scrollY;
                 contextMenu.style.left = x + 'px';
                 contextMenu.style.top = y + 'px';
@@ -362,13 +371,20 @@ dir.addEventListener('click', function (event) {
 
 /* shift多选文件功能 */
 let startFile = null;
+var shiftMode = false;
+
+//开启或关闭文件多选模式
+document.getElementById('shift').addEventListener('click', function () {
+    if (!shiftMode) shiftMode = true;
+    else shiftMode = false;
+});
 
 // 监听文件元素容器的点击事件
 dir.addEventListener('click', function (event) {
     const file = event.target.closest('.file');
 
     // 如果点击的不是文件元素或者未按住shift键，则直接返回
-    if (!event.shiftKey) return;
+    if (!event.shiftKey && !shiftMode) return;
 
     // 如果已经记录了起始文件元素
     if (startFile) {
@@ -390,8 +406,10 @@ dir.addEventListener('click', function (event) {
             files[i].addEventListener('contextmenu', function (e) {
                 e.preventDefault();//阻止默认的右键菜单显示
 
+                if (!target.classList.contains('selected')) return;
+
                 //计算菜单的显示位置
-                let x = e.clientX;
+                let x = e.clientX + window.scrollX;
                 let y = e.clientY + window.scrollY;
                 contextMenu.style.left = x + 'px';
                 contextMenu.style.top = y + 'px';
@@ -434,7 +452,7 @@ function deleteSelected() {
 
 //清除选中
 dir.addEventListener('click', function (event) {
-    if (!event.ctrlKey && !event.shiftKey) {
+    if (!event.ctrlKey && !event.shiftKey && !ctrlMode && !shiftMode && !allMode) {
         // 取消之前所有文件的选中状态
         document.querySelectorAll('.file.selected').forEach(function (el) {
             el.classList.remove('selected');
@@ -442,6 +460,53 @@ dir.addEventListener('click', function (event) {
         startFile = null;//清除起始文件
     }
 });
+
+//文件全选
+var allMode = false;
+document.getElementById('all').addEventListener('click', function () {
+    if (!allMode) {
+        allMode = true;
+        selectAllFiles();
+    } else {
+        allMode = false;
+        cancelSelectAllFiles();
+    }
+});
+
+function selectAllFiles() {
+    document.querySelectorAll('.file').forEach(function (file) {
+        file.classList.add('selected');
+
+        //为.selected元素添加监听
+        let contextMenu = document.getElementById('context-menu');
+        file.addEventListener('contextmenu', function (e) {
+            e.preventDefault();//阻止默认的右键菜单显示
+
+            //计算菜单的显示位置
+            let x = e.clientX;
+            let y = e.clientY + window.scrollY;
+            contextMenu.style.left = x + 'px';
+            contextMenu.style.top = y + 'px';
+            contextMenu.style.display = 'flex';
+
+            // 监听鼠标点击或按 Esc 键关闭菜单
+            document.addEventListener('click', function () {
+                contextMenu.style.display = 'none';
+            }, { once: true });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    contextMenu.style.display = 'none';
+                }
+            }, { once: true });
+        });
+    });
+}
+
+function cancelSelectAllFiles() {
+    document.querySelectorAll('.file').forEach(function (file){
+        file.classList.remove('selected');
+    });
+}
 
 //修改用户文件夹名称
 var inputElement = document.createElement('input');//创建input元素
