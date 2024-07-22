@@ -463,13 +463,15 @@ dir.addEventListener('click', function (event) {
 
 //文件全选
 var allMode = false;
-document.getElementById('all').addEventListener('click', function () {
-    if (!allMode) {
-        allMode = true;
+var allOption = document.getElementById('all');
+allOption.addEventListener('click', function () {
+    if (allOption.classList.contains('on')) {
         selectAllFiles();
+        allMode = true;
     } else {
-        allMode = false;
+        // 清除所有文件的选中状态
         cancelSelectAllFiles();
+        allMode = false;
     }
 });
 
