@@ -46,7 +46,7 @@ document.getElementById('avatar-input').addEventListener('change', function(even
 
     // 检查文件大小
     if (file.size > MAX_FILE_SIZE) {
-        alert("文件太大，不能超过 " + MAX_FILE_SIZE / 1024 / 1024 + "MB.");
+        warningPopup("文件太大，不能超过 " + MAX_FILE_SIZE / 1024 / 1024 + "MB.");
         return; // 终止函数执行，不上传大文件
     }
 
@@ -71,6 +71,7 @@ document.getElementById('avatar-input').addEventListener('change', function(even
                         // 设置图片路径到 user-avatar
                         document.querySelector('.user-avatar').src = uploadedImageUrl;
                     } else {
+                        InfoPopup("头像上传失败，请稍后再试.");
                         // 如果服务器返回失败，处理错误
                         console.error('上传头像失败:', response.message);
                     }
@@ -97,44 +98,6 @@ document.querySelector('.change-password').addEventListener('click', function() 
     //打开reset.html页面
     window.open('reset.html', '_self');
 });
-
-//工具栏选项的开启与关闭
-let toolOption = document.querySelectorAll('.tool-option');
-toolOption.forEach((option) => {
-    if (option.id == 'sort') return;
-
-    option.addEventListener('click', function () {
-        let on = option.classList.contains('on');
-
-        //移除所有开启的功能
-        let enabled = document.querySelectorAll('.on');
-        enabled.forEach((e) => {
-            if (e.id == 'sort') return;
-            e.classList.remove('on');
-        })
-
-        if (!on) option.classList.add('on');
-    });
-})
-
-//对选中的排序方式进行高亮显示
-var sortTool = document.getElementById('sort');
-let modeSelected = null;
-let modeOptions = sortTool.querySelectorAll('.mode-content li');
-modeOptions.forEach((e) => {
-    e.addEventListener('click', function () {
-        if (modeSelected != e) {
-            if (modeSelected != null) modeSelected.classList.remove('mode-selected');
-            modeSelected = e;
-            e.classList.add('mode-selected');
-            sortTool.classList.add('on');
-        } else {
-            modeSelected = null;
-            e.classList.remove('mode-selected');
-            sortTool.classList.remove('on');
-        }
-    })
-})
 
 //文件上传
 document.addEventListener('DOMContentLoaded', function () {
@@ -201,7 +164,7 @@ function downloadFile() {
     // 检查userID是否存在
     if (!userID) {
         console.error('User ID not found.');
-        alert('用户似乎已经退出，请重新登录.');
+        warningPopup('用户似乎已经退出，请重新登录.');
         return;
     }
 
@@ -224,11 +187,11 @@ function downloadFile() {
           if (response.ok) {
               return response.blob();
           }else if (response.status === 401){
-                alert('用户似乎已经退出，请重新登录.');
+                warningPopup('用户似乎已经退出，请重新登录.');
           } else if(response.status === 404){
-                alert('文件 \"' + fileName + '\" 不存在！');
+                errorPopup('文件 \"' + fileName + '\" 不存在！');
           } else if(response.status == 500){
-                alert('服务器内部错误！');
+                errorPopup('服务器内部错误！');
           }
           else {
                 throw new Error('Network response was not ok');
@@ -263,7 +226,7 @@ function deleteFile() {
       // 检查userID是否存在
       if (!userID) {
         console.error('User ID not found.');
-        alert('用户似乎已经退出，请重新登录.');
+        warningPopup('用户似乎已经退出，请重新登录.');
         return;
       }
 
@@ -294,13 +257,13 @@ function deleteFile() {
             if(response.status === 200) {
                 // 从DOM中移除父节点
                 fileContainer.remove();
-                alert('删除文件 \"' + fileName + '\" 成功！');
+                InfoPopup('删除文件 \"' + fileName + '\" 成功！');
             } else if (response.status === 401){
-                alert('用户似乎已经退出，请重新登录.');
+                warningPopup('用户似乎已经退出，请重新登录.');
             } else if(response.status === 404){
-                alert('文件 \"' + fileName + '\" 不存在！');
+                errorPopup('文件 \"' + fileName + '\" 不存在！');
             } else if(response.status == 500){
-                alert('服务器内部错误！');
+                errorPopup('服务器内部错误！');
             }
             else if(!response.ok) {
                 throw new Error('Network response was not ok');
@@ -315,19 +278,97 @@ function deleteFile() {
       });
 }
 
-/* Ctrl多选文件功能 */
-const dir = document.querySelector('.dir');
-var ctrlMode = false;
+//下载所有已选项
+function downloadSelected() {
+    let selectedDownloadTasks = document.querySelectorAll('.selected .download');
+    selectedDownloadTasks.forEach((e) => {
+        e.click();//点击下载按钮触发下载任务
+    });
+}
+
+//删除所有已选项
+function deleteSelected() {
+    let selectedDeleteTasks = document.querySelectorAll('.selected .delete');
+    downloadCount = selectedDeleteTasks.length;
+    selectedDeleteTasks.forEach((e) => {
+        e.click();//点击删除按钮触发删除任务
+    });
+}
+
+/*
+    实现main.jsp中的工具栏中的功能：
+    1.文件多选
+    2.连续多选
+    3.文件全选
+    4.文件排序
+ */
+const dir = document.querySelector('.dir');//文件容器
+var ctrlMode = false;//多选模式
+var shiftMode = false;//连续多选模式
+var allMode = false;//全选模式
+
+//工具栏选项的开启与关闭
+let toolOption = document.querySelectorAll('.tool-option');
+toolOption.forEach((option) => {
+    if (option.id == 'sort') return;//sort功能可以与其他功能一起开启
+
+    //多选、连续多选、全选相互排斥
+    option.addEventListener('click', function () {
+        let on = option.classList.contains('on');
+
+        //移除所有开启的功能
+        let enabled = document.querySelectorAll('.on');
+        enabled.forEach((e) => {
+            if (e.id == 'sort') return;
+            e.classList.remove('on');
+        })
+
+        ctrlMode = false;
+        shiftMode = false;
+        allMode = false;
+
+        if (!on) option.classList.add('on');
+    });
+})
 
 //开启或关闭文件多选模式
-document.getElementById('ctrl').addEventListener('click', function () {
-    if (!ctrlMode) ctrlMode = true;
+let ctrlOption = document.getElementById('ctrl');
+ctrlOption.addEventListener('click', function () {
+    if (ctrlOption.classList.contains('on')) ctrlMode = true;
     else ctrlMode = false;
 });
 
+//开启或关闭文件连续多选模式
+let shiftOption = document.getElementById('shift');
+shiftOption.addEventListener('click', function () {
+    if (shiftOption.classList.contains('on')) shiftMode = true;
+    else shiftMode = false;
+});
+
+//排序选项的菜单选中时进行高亮显示
+var sortTool = document.getElementById('sort');
+let modeSelected = null;
+let modeOptions = sortTool.querySelectorAll('.mode-content li');
+modeOptions.forEach((e) => {
+    e.addEventListener('click', function () {
+        if (modeSelected != e) {
+            if (modeSelected != null) modeSelected.classList.remove('mode-selected');
+            modeSelected = e;
+            e.classList.add('mode-selected');
+            sortTool.classList.add('on');
+        } else {
+            modeSelected = null;
+            e.classList.remove('mode-selected');
+            sortTool.classList.remove('on');
+        }
+    })
+})
+
+/* ================= Ctrl多选文件功能 ================== */
+
 // 为文件容器添加点击事件监听器
 dir.addEventListener('click', function (event) {
-    // 检查是否按住Ctrl键
+    // 检查是否按住Ctrl键或者开启多选模式
     if (!event.ctrlKey && !ctrlMode) return;
 
     // 使用 event.target 来获取实际被点击的元素
@@ -339,7 +380,7 @@ dir.addEventListener('click', function (event) {
             target.classList.toggle('selected');
 
             //为.selected元素添加监听
-            contextMenu = document.getElementById('context-menu');
+            let contextMenu = document.getElementById('context-menu');
             target.addEventListener('contextmenu', function (e) {
                 e.preventDefault();//阻止默认的右键菜单显示
 
@@ -365,26 +406,20 @@ dir.addEventListener('click', function (event) {
 
             break;
         }
-        target = target.parentElement;
+        target = target.parentElement;//通过递归检查父节点来查找到所点击的.file元素
     }
 });
 
-/* shift多选文件功能 */
-let startFile = null;
-var shiftMode = false;
-
-//开启或关闭文件多选模式
-document.getElementById('shift').addEventListener('click', function () {
-    if (!shiftMode) shiftMode = true;
-    else shiftMode = false;
-});
+/* ================== shift连续多选文件功能 ================== */
+let startFile = null;//连续多选的起始文件
 
 // 监听文件元素容器的点击事件
 dir.addEventListener('click', function (event) {
-    const file = event.target.closest('.file');
-
     // 如果点击的不是文件元素或者未按住shift键，则直接返回
     if (!event.shiftKey && !shiftMode) return;
+
+    const file = event.target.closest('.file');
+    if (file == null) return;
 
     // 如果已经记录了起始文件元素
     if (startFile) {
@@ -399,6 +434,7 @@ dir.addEventListener('click', function (event) {
         let endIndex = Array.prototype.indexOf.call(files, file);
 
         for (let i = Math.min(startIndex, endIndex); i <= Math.max(startIndex, endIndex); i++) {
+            if (files[i] == null) return;
             files[i].classList.add('selected');
 
             //为.selected元素添加监听
@@ -406,7 +442,7 @@ dir.addEventListener('click', function (event) {
             files[i].addEventListener('contextmenu', function (e) {
                 e.preventDefault();//阻止默认的右键菜单显示
 
-                if (!target.classList.contains('selected')) return;
+                if (!files[i].classList.contains('selected')) return;
 
                 //计算菜单的显示位置
                 let x = e.clientX + window.scrollX;
@@ -434,47 +470,19 @@ dir.addEventListener('click', function (event) {
     }
 });
 
-//下载所有已选项
-function downloadSelected() {
-    let selectedDownloadTasks = document.querySelectorAll('.selected .download');
-    selectedDownloadTasks.forEach((e) => {
-        e.click();//点击下载按钮触发下载任务
-    });
-}
-
-//删除所有已选项
-function deleteSelected() {
-    let selectedDeleteTasks = document.querySelectorAll('.selected .delete');
-    selectedDeleteTasks.forEach((e) => {
-        e.click();//点击删除按钮触发删除任务
-    });
-}
-
-//清除选中
-dir.addEventListener('click', function (event) {
-    if (!event.ctrlKey && !event.shiftKey && !ctrlMode && !shiftMode && !allMode) {
-        // 取消之前所有文件的选中状态
-        document.querySelectorAll('.file.selected').forEach(function (el) {
-            el.classList.remove('selected');
-        });
-        startFile = null;//清除起始文件
-    }
-});
-
-//文件全选
-var allMode = false;
+/* ================== 文件全选功能 ================== */
 var allOption = document.getElementById('all');
 allOption.addEventListener('click', function () {
     if (allOption.classList.contains('on')) {
         selectAllFiles();
         allMode = true;
     } else {
-        // 清除所有文件的选中状态
         cancelSelectAllFiles();
         allMode = false;
     }
 });
 
+//文件全选
 function selectAllFiles() {
     document.querySelectorAll('.file').forEach(function (file) {
         file.classList.add('selected');
@@ -504,13 +512,51 @@ function selectAllFiles() {
     });
 }
 
+//文件取消全选
 function cancelSelectAllFiles() {
-    document.querySelectorAll('.file').forEach(function (file){
+    document.querySelectorAll('.file').forEach(function (file) {
         file.classList.remove('selected');
     });
 }
 
-//修改用户文件夹名称
+//当切换到多选或连续多选的模式时清除文件全选的效果
+var observer = new MutationObserver(function (mutationsList, observer) {
+    // 遍历mutationsList，检查每个变化
+    for (let mutation of mutationsList) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            // 检查是否移除了selected类
+            if (!allOption.classList.contains('selected')) {
+                // 清除所有文件的选中状态
+                document.querySelectorAll('.file').forEach(function (file) {
+                    file.classList.remove('selected');
+                });
+            }
+        }
+    }
+});
+
+var config = { attributes: true, attributeFilter: ['class'] };
+
+observer.observe(allOption, config);
+// 如果需要停止观察，可以调用observer.disconnect()
+
+
+/* ================== 文件选中状态的取消 ================== */
+
+//当未开启工具栏中任何模式时，点击文件容器的文件外的其他位置将取消全部文件的选中状态
+dir.addEventListener('click', function (event) {
+    const file = event.target.closest('.file');
+
+    if (!event.ctrlKey && !event.shiftKey && !shiftMode && !ctrlMode && !allMode || file == null && !allMode) {
+        // 取消之前所有文件的选中状态
+        document.querySelectorAll('.file.selected').forEach(function (el) {
+            el.classList.remove('selected');
+        });
+        startFile = null;//清除起始文件
+    }
+});
+
+/* ================== 文件名的修改 ================== */
 var inputElement = document.createElement('input');//创建input元素
 inputElement.classList.add('name-input');
 inputElement.type = 'text';
@@ -559,6 +605,8 @@ userFolder.forEach(function (e) {
         };
     });
 });
+
+/* ================== 创建文件夹 ================== */
 
 //获取最后一个用户文件夹
 var otherFolder = dir.querySelector('.other');
@@ -647,3 +695,73 @@ function getFormattedDate() {
 
     return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
 };
+
+/* ================ 自定义消息提示 ================ */
+
+// 弹出弹窗
+function popup(msgPopup) {
+    msgPopup.classList.add('show');
+    setTimeout(function () {
+        msgPopup.classList.add('hide');
+        setTimeout(() => {
+            msgPopup.remove();//移除弹窗
+        }, 2000);//两秒后移除弹窗
+    }, 3000);
+}
+
+//信息弹窗
+function InfoPopup(message) {
+    var popupDiv = document.createElement('div');
+    popupDiv.classList.add('pop-up');
+    popupDiv.innerHTML = `<svg t="1718616163146" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            p-id="8873">
+            <path d="M0 0h1024v1024H0V0z" fill="#202425" opacity=".01" p-id="8874"></path>
+            <path
+                d="M955.733333 512c0 245.077333-198.656 443.733333-443.733333 443.733333S68.266667 757.077333 68.266667 512 266.922667 68.266667 512 68.266667s443.733333 198.656 443.733333 443.733333z"
+                fill="#11AA66" p-id="8875"></path>
+            <path
+                d="M512 102.4C285.7984 102.4 102.4 285.7984 102.4 512s183.3984 409.6 409.6 409.6 409.6-183.3984 409.6-409.6S738.2016 102.4 512 102.4zM34.133333 512C34.133333 248.081067 248.081067 34.133333 512 34.133333s477.866667 213.947733 477.866667 477.866667-213.947733 477.866667-477.866667 477.866667S34.133333 775.918933 34.133333 512z"
+                fill="#11AA66" p-id="8876"></path>
+            <path
+                d="M512 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v17.066666a68.266667 68.266667 0 1 1-136.533334 0V273.066667a68.266667 68.266667 0 0 1 68.266667-68.266667z m0 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v273.066666a68.266667 68.266667 0 1 1-136.533334 0v-273.066666a68.266667 68.266667 0 0 1 68.266667-68.266667z"
+                fill="#FFFFFF" p-id="8877"></path>
+        </svg>
+        <div class="pop-up-info">${message}</div>`;
+    document.body.appendChild(popupDiv); // 添加到body元素
+
+    popup(popupDiv);
+}
+
+//异常错误弹窗
+function errorPopup(message) {
+    var popupDiv = document.createElement('div');
+    popupDiv.classList.add('pop-up');
+    popupDiv.innerHTML = `<svg t="1718545187783" class="pop-up-icon" viewBox="0 0 1024 1024" version="1.1"
+            xmlns="http://www.w3.org/2000/svg" p-id="12558" width="1vw" height="1vw">
+            <path
+                d="M512 0C230.4 0 0 230.4 0 512s230.4 512 512 512 512-230.4 512-512S793.6 0 512 0zM593.066667 145.066667l-21.333333 486.4c0 29.866667-25.6 51.2-55.466667 51.2l-12.8 0c-29.866667 0-51.2-21.333333-55.466667-51.2L426.666667 145.066667c0-29.866667 21.333333-51.2 46.933333-51.2l68.266667 0C571.733333 93.866667 597.333333 115.2 593.066667 145.066667zM571.733333 913.066667C554.666667 930.133333 533.333333 938.666667 512 938.666667c-25.6 0-42.666667-8.533333-59.733333-25.6C435.2 896 426.666667 878.933333 426.666667 853.333333c0-25.6 8.533333-42.666667 25.6-59.733333C469.333333 776.533333 486.4 768 512 768c25.6 0 46.933333 8.533333 64 25.6 17.066667 17.066667 25.6 34.133333 25.6 59.733333C597.333333 878.933333 588.8 900.266667 571.733333 913.066667z"
+                fill="#F7411C" p-id="12559"></path>
+        </svg>
+        <div class="pop-up-info">${message}</div>`;
+    document.body.appendChild(popupDiv); // 添加到body元素
+
+    popup(popupDiv);
+}
+
+//警告弹窗
+function warningPopup(message) {
+    var popupDiv = document.createElement('div');
+    popupDiv.classList.add('pop-up');
+    popupDiv.innerHTML = `<svg t="1721737216452" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+        p-id="31530">
+        <path d="M0 512a512 512 0 1 0 1024 0A512 512 0 1 0 0 512z" fill="#FFBB0C" p-id="31531"></path>
+        <path
+            d="M512 227.556c39.822 0 73.956 34.133 73.956 73.955v11.378l-39.823 290.133c0 11.378-11.377 22.756-28.444 22.756H506.31c-11.378 0-28.444-11.378-28.444-22.756L438.044 312.89c-5.688-39.822 22.756-79.645 62.578-85.333H512z m0 483.555c34.133 0 56.889 22.756 56.889 56.889S546.133 824.889 512 824.889 455.111 802.133 455.111 768s22.756-56.889 56.889-56.889z"
+            fill="#fff" p-id="31532"></path>
+    </svg>
+    <div class="pop-up-info">${message}</div>`;
+
+    document.body.appendChild(popupDiv); // 添加到body元素
+
+    popup(popupDiv);
+}

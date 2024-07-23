@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 .pop-up {
-    position: absolute;
+    position: fixed;
     top: 5vh;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -9,7 +9,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    column-gap: 1vw;
+    column-gap: 0.5vw;
     padding: 1vh 1vw;
     box-shadow: 5px 5px 10px 0 rgba(0, 0, 0, 0.3);
     opacity: 0;
@@ -52,4 +52,9 @@
 
 .pop-up-info {
     color: rgba(0, 0, 0, 0.8);
+}
+
+.pop-up svg {
+    width: 1vw;
+    height: 1vw;
 }
