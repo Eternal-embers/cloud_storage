@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Range Download Example</title>
+    <style>
+        #progressBar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            position: relative;
+        }
+
+        #progress {
+            background-color: #4CAF50;
+            position: absolute;
+            left: 0;
+            width: 0%;
+            height: 100%;
+        }
+
+        #downloadSpeed {
+            margin-right: 1vw;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Download Progress</h1>
+    <div id="progressBar">
+        <div id="progress" value="0%"></div>
+    </div>
+    <p>
+        <span id="downloadStatus">Waiting to start download...</span>
+        <span id="downloadSpeed"></span>
+    </p>
+    <p id="averageSpeed"></p>
+    <button id="downloadButton">Download File</button>
+    <button id="pauseButton">pause</button>
+    <button id="resumeButton">resume</button>
+
+    <script defer>
+        const path = 'video/start.mp4'; // 替换为实际文件路径
+        let fileSize = 0;
+        let curStart = 0;//当前下载的范围起始位置
+        let curEnd = 0;//当前下载的范围的终止位置
+        let downloaded = 0; // 已下载字节数
+        let lastDownloaded = 0;//上一次已下载的字节数
+        let lastTime = 0; // 上次更新进度的时间
+        let startTime = 0;//开始下载时间
+        let endTime = 0;//结束下载时间
+        const chunkSize = 1024 * 1024; // 1MB
+        let isPaused = false; // 控制下载是否暂停
+        let downloadInterval; // 用于保存setInterval的返回值，以便清除
+
+        /* 更新下载进度 */
+        function updateProgress(loaded, total) {
+            const progress = (loaded / total) * 100;
+            downloaded = loaded;
+            document.getElementById('progress').style.width = `${progress.toFixed(2)}%`;
+            document.getElementById('progress').setAttribute('value', `${progress.toFixed(2)}%`);
+            document.getElementById('downloadStatus').textContent = `Downloading... ${progress.toFixed(2)}%`;
+        }
+
+        /* 更新下载速度 */
+        function updateSpeed() {
+            const currentTime = new Date().getTime();
+            const speed = (currentTime - lastTime) > 0 ? (downloaded - lastDownloaded) / ((currentTime - lastTime) / 1000) : 0;
+            lastDownloaded = downloaded;
+            lastTime = currentTime;
+
+            if (speed > 0) {
+                // 根据速度选择合适的单位显示
+                let speedUnit = 'B/s';
+                let displaySpeed = speed;
+                if (speed >= 1024) {
+                    speedUnit = 'KB/s';
+                    displaySpeed = speed / 1024;
+                }
+                if (displaySpeed >= 1024) {
+                    speedUnit = 'MB/s';
+                    displaySpeed /= 1024;
+                }
+
+                if (displaySpeed >= 1024 * 1024) {
+                    speedUnit = 'GB/s';
+                    displaySpeed /= 1024 * 1024;
+                }
+
+                // 格式化速度显示为两位小数
+                const formattedSpeed = displaySpeed.toFixed(2);
+                document.getElementById('downloadSpeed').textContent = ` - ${formattedSpeed} ${speedUnit}`;
+            }
+        }
+
+        /* 计算平均下载速度 */
+        function getAverageSpeed() {
+            const speed = (endTime - startTime) > 0 ? fileSize / ((endTime - startTime) / 1000) : 0;
+
+            if (speed > 0) {
+                // 根据速度选择合适的单位显示
+                let speedUnit = 'B/s';
+                let displaySpeed = speed;
+                if (speed >= 1024) {
+                    speedUnit = 'KB/s';
+                    displaySpeed = speed / 1024;
+                }
+                if (displaySpeed >= 1024) {
+                    speedUnit = 'MB/s';
+                    displaySpeed /= 1024;
+                }
+
+                if (displaySpeed >= 1024 * 1024) {
+                    speedUnit = 'GB/s';
+                    displaySpeed /= 1024 * 1024;
+                }
+
+                // 格式化速度显示为两位小数
+                const formattedSpeed = displaySpeed.toFixed(2);
+                document.getElementById('averageSpeed').textContent = `平均速度 - ${formattedSpeed} ${speedUnit}`;
+            }
+        }
+
+        /* 获取文件大小 */
+        async function getFileSize() {
+            try {
+                const response = await fetch(`getFileSize?path=${encodeURIComponent(path)}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                fileSize = parseInt(await response.text(), 10);
+                console.log(fileSize + '字节');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        /* 下载文件的特定部分 */
+        let receivedLength = 0;
+        let chunks = [];
+        async function downloadChunk(start, end) {
+            try {
+                const headers = new Headers();
+                headers.append('Range', `bytes=${start}-${end}`);
+                const response = await fetch(`RangeDownload?path=${encodeURIComponent(path)}`, { headers: headers });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const reader = response.body.getReader();
+
+                const readStream = async () => {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        receivedLength += value.byteLength;
+                        chunks.push(value);
+                        updateProgress(receivedLength, fileSize);
+                    }
+                };
+                await readStream();
+            } catch (error) {
+                console.error('Download error:', error);
+            }
+        }
+
+        //下载文件
+        async function downloadFile() {
+            let start = 0;
+            let end = start + chunkSize - 1;
+
+            //如果存在之前的下载，从上次下载位置继续下载
+            if (curStart != 0) {
+                start = curStart;
+                end = curEnd;
+            }
+
+            //间隔0.5s计算一次速度
+            speedInterval = setInterval(() => {
+                updateSpeed();
+            }, 500);
+
+            const progressElement = document.getElementById('progress');
+
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'value') {
+                        const currentValue = mutation.target.getAttribute('value');
+                        if (currentValue === '100.00%') {
+                            console.log('Progress reached 100%');
+                            observer.disconnect(); // 断开观察
+                            clearInterval(speedInterval);
+                            clearInterval(downloadInterval); // 清除下载间隔
+                            triggerDownload();
+                        }
+                    }
+                });
+            });
+
+            // 配置MutationObserver选项
+            const config = { attributes: true, attributeFilter: ['value'] };
+            observer.observe(progressElement, config);
+
+            while (start < fileSize) {
+                // 如果没有暂停，则继续下载
+                await downloadChunk(start, end);
+                start += chunkSize;
+                end = start + chunkSize - 1;
+                if (isPaused) {
+                    curStart = start;
+                    curEnd = end;
+                    return;
+                }
+            }
+        }
+
+        //触发下载
+        function triggerDownload() {
+            const blob = new Blob(chunks, { type: 'video/mp4' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = path.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            endTime = new Date().getTime();
+            getAverageSpeed();
+        }
+
+        let downloadButton = document.getElementById('downloadButton');
+        let pauseButton = document.getElementById('pauseButton');
+        let resumeButton = document.getElementById('resumeButton');
+
+        pauseButton.disabled = true;
+        resumeButton.disabled = true;
+
+        //下载
+        downloadButton.addEventListener('click', () => {
+            startTime = new Date().getTime();
+            pauseButton.disabled = false;
+            getFileSize().then(() => {
+                if (fileSize < 1024 * 1024 * 10) downloadChunk(0, fileSize).then(triggerDownload);//直接下载整个文件
+                else downloadFile();
+            })
+        });
+
+        // 暂停下载
+        pauseButton.addEventListener('click', () => {
+            isPaused = true;
+            console.log(`${curStart}, ${curEnd}`);
+            pauseButton.disabled = true;
+            resumeButton.disabled = false;
+        });
+
+        // 恢复下载
+        resumeButton.addEventListener('click', () => {
+            isPaused = false;
+            pauseButton.disabled = false;
+            resumeButton.disabled = true;
+            downloadFile();//继续下载
+
+
+        });
+    </script>
+</body>
+
+</html>
