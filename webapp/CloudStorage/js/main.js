@@ -15,7 +15,7 @@ mask.addEventListener('click', function () {
     document.body.style.overflowY = 'auto';
 })
 
-//搜索框
+/* ================ 搜索框 ================ */
 let search_input = document.getElementById('search-input');
 let search_clear = document.querySelector('.search-clear');
 
@@ -39,7 +39,7 @@ search_clear.addEventListener('click', function () {
 });
 
 //处理头像上传
-document.getElementById('avatar-input').addEventListener('change', function(event) {
+document.getElementById('avatar-input').addEventListener('change', function (event) {
     var file = event.target.files[0]; // 获取选择的文件
 
     var MAX_FILE_SIZE = 10 * 1024 * 1024; // 限制大小，例如 10MB
@@ -60,7 +60,7 @@ document.getElementById('avatar-input').addEventListener('change', function(even
         // 使用 XMLHttpRequest 发送 AJAX 请求
         var xhr = new XMLHttpRequest();
         xhr.open('POST', 'uploadAvatar', true);
-        xhr.onload = function() {
+        xhr.onload = function () {
             if (xhr.status === 200) {
                 try {
                     // 尝试将响应文本解析为 JSON
@@ -94,12 +94,12 @@ document.getElementById('avatar-input').addEventListener('change', function(even
     window.open(location.href, '_self');
 });
 
-document.querySelector('.change-password').addEventListener('click', function() {
+document.querySelector('.change-password').addEventListener('click', function () {
     //打开reset.html页面
     window.open('reset.html', '_self');
 });
 
-//文件上传
+/* ================ 文件上传的组件切换 ================ */
 document.addEventListener('DOMContentLoaded', function () {
     let filesContent = document.querySelector('.files-content');//获取文件列表块
     let ignoreFilesInput = document.getElementById('ignore-files');//忽略的文件的索引
@@ -147,12 +147,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 //重新上传
 document.getElementById('clear').addEventListener('click', function () {
-        document.getElementById('submit').style.display = 'none';
-        document.getElementById('select').style.display = 'block';
-        document.getElementById('files-list').style.display = 'none';
+    document.getElementById('submit').style.display = 'none';
+    document.getElementById('select').style.display = 'block';
+    document.getElementById('files-list').style.display = 'none';
 });
 
-//下载文件
+/* ================ 文件的下载 ================ */
+/* 使用download.js替代此函数的功能
 function downloadFile() {
     // 找到.download元素的父节点，即包含文件信息的div
     const fileContainer = event.target.closest('.file');
@@ -210,72 +211,72 @@ function downloadFile() {
         })
         .catch(e => console.error('Download error:', e));
 }
-
+*/
 
 //删除文件
 function deleteFile() {
-      // 找到.delete元素的父节点，即包含文件信息的div
-      const fileContainer = event.target.closest('.file');
+    // 找到.delete元素的父节点，即包含文件信息的div
+    const fileContainer = event.target.closest('.file');
 
-      console.log('删除文件:', fileContainer);
+    console.log('删除文件:', fileContainer);
 
-      // 假设userID存储在页面的某个元素中，例如一个隐藏的input元素
-      const userIdElement = document.getElementById('userID');
-      const userID = userIdElement ? userIdElement.getAttribute('user-id') : null;
+    // 假设userID存储在页面的某个元素中，例如一个隐藏的input元素
+    const userIdElement = document.getElementById('userID');
+    const userID = userIdElement ? userIdElement.getAttribute('user-id') : null;
 
-      // 检查userID是否存在
-      if (!userID) {
+    // 检查userID是否存在
+    if (!userID) {
         console.error('User ID not found.');
         warningPopup('用户似乎已经退出，请重新登录.');
         return;
-      }
+    }
 
-      // 从父节点属性中获取文件名
-      const fileName = fileContainer.getAttribute('file-name');
+    // 从父节点属性中获取文件名
+    const fileName = fileContainer.getAttribute('file-name');
 
-      //从父节点属性中获取文件id
-      const fileID = fileContainer.getAttribute('file-id');
+    //从父节点属性中获取文件id
+    const fileID = fileContainer.getAttribute('file-id');
 
-      // 构建请求体
-      const requestBody = {
+    // 构建请求体
+    const requestBody = {
         fileName: fileName,
         userID: userID
-      };
+    };
 
-      let url = 'deleteFile?' + "user_id=" + userID + "&file_id=" + fileID;
+    let url = 'deleteFile?' + "user_id=" + userID + "&file_id=" + fileID;
 
 
-      // 发送请求到服务器删除文件
-      fetch(url, {
+    // 发送请求到服务器删除文件
+    fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         },
-      })
-      .then(
-        response => {
-            if(response.status === 200) {
-                // 从DOM中移除父节点
-                fileContainer.remove();
-                InfoPopup('删除文件 \"' + fileName + '\" 成功！');
-            } else if (response.status === 401){
-                warningPopup('用户似乎已经退出，请重新登录.');
-            } else if(response.status === 404){
-                errorPopup('文件 \"' + fileName + '\" 不存在！');
-            } else if(response.status == 500){
-                errorPopup('服务器内部错误！');
+    })
+        .then(
+            response => {
+                if (response.status === 200) {
+                    // 从DOM中移除父节点
+                    fileContainer.remove();
+                    InfoPopup('删除文件 \"' + fileName + '\" 成功！');
+                } else if (response.status === 401) {
+                    warningPopup('用户似乎已经退出，请重新登录.');
+                } else if (response.status === 404) {
+                    errorPopup('文件 \"' + fileName + '\" 不存在！');
+                } else if (response.status == 500) {
+                    errorPopup('服务器内部错误！');
+                }
+                else if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
             }
-            else if(!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-        }
-      )
-      .then(data => {
+        )
+        .then(data => {
             console.log('File deletion response:', data);
-      })
-      .catch(error => {
+        })
+        .catch(error => {
             console.error('Error deleting file:', error);
-      });
+        });
 }
 
 //下载所有已选项
@@ -556,6 +557,63 @@ dir.addEventListener('click', function (event) {
     }
 });
 
+/* ================== 下载任务列表 ================== */
+let taskWindow = document.getElementById('task-window');
+let windowTitle = taskWindow.querySelector('.window-title');
+
+/* 拖动下载任务列表 */
+var startX, startY, startMouseX, startMouseY;
+
+// 鼠标按下事件，记录初始位置
+windowTitle.addEventListener('mousedown', function (event) {
+    // 阻止默认行为，例如文本选择等
+    event.preventDefault();
+
+    // 记录鼠标和元素的初始位置
+    startX = taskWindow.offsetLeft;
+    startY = taskWindow.offsetTop;
+    startMouseX = event.clientX;
+    startMouseY = event.clientY;
+
+    taskWindow.classList.add('dragging');
+
+    // 添加mousemove和mouseup事件监听器
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+});
+
+// 鼠标移动事件，更新元素位置
+function onMouseMove(event) {
+    var deltaX = event.clientX - startMouseX;
+    var deltaY = event.clientY - startMouseY;
+
+    // 更新元素的位置
+    taskWindow.style.left = startX + deltaX + 'px';
+    taskWindow.style.top = startY + deltaY + 'px';
+}
+
+// 鼠标释放事件，停止拖动
+function onMouseUp() {
+    taskWindow.classList.remove('dragging');
+
+    // 移除mousemove和mouseup事件监听器
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+}
+
+//打开和关闭下载任务列表
+document.getElementById('task').addEventListener('click', function () {
+    if (taskWindow.style.display === 'flex')
+        taskWindow.style.display = 'none';
+    else
+        taskWindow.style.display = 'flex';
+});
+
+//关闭下载页面
+document.querySelector('.window-exit').addEventListener('click', function () {
+    taskWindow.style.display = 'none';
+});
+
 /* ================== 文件名的修改 ================== */
 var inputElement = document.createElement('input');//创建input元素
 inputElement.classList.add('name-input');
@@ -666,8 +724,8 @@ createDir.addEventListener('click', function () {
                 // 如果去除空格后输入框中有内容，更新名称
                 folderNameElement.textContent = newName;
 
-                 //更新文件夹的修改日期
-                 folderModifyTime.textContent = getFormattedDate();
+                //更新文件夹的修改日期
+                folderModifyTime.textContent = getFormattedDate();
             }
 
             newFolder.classList.remove("edit");

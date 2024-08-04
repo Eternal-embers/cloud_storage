@@ -197,7 +197,7 @@ svg {
 }
 
 #search-input:focus {
-    border-color:  #4493f8;
+    border-color: #4493f8;
     border-radius: 0.5vw;
     transition: all ease-in-out 0.3s;
 }
@@ -294,12 +294,12 @@ input[type="search"]::-webkit-search-cancel-button {
     height: 100%;
 }
 
-#avatar-input{
+#avatar-input {
     position: absolute;
     width: 4vw;
     height: 4vw;
     opacity: 0;
-    index: 1;
+    z-index: 1;
 }
 
 .user_name {
@@ -398,7 +398,7 @@ input[type="search"]::-webkit-search-cancel-button {
     background-color: #f76666;
 }
 
-#logout:hover .info{
+#logout:hover .info {
     color: rgba(255, 255, 255, 0.7);
 }
 
@@ -580,7 +580,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .folder,
-.file{
+.file {
     width: 100%;
     height: 5vh;
     margin: 1vh 0;
@@ -590,10 +590,14 @@ input[type="search"]::-webkit-search-cancel-button {
     padding: 1vh 1vw;
 
     /* 禁用选中 */
-    -webkit-user-select: none !important;/* Safari */
-    -moz-user-select: none !important;/* Firefox */
-    -ms-user-select: none !important;/* IE/Edge */
-    user-select: none !important;/* 标准语法 */
+    -webkit-user-select: none !important;
+    /* Safari */
+    -moz-user-select: none !important;
+    /* Firefox */
+    -ms-user-select: none !important;
+    /* IE/Edge */
+    user-select: none !important;
+    /* 标准语法 */
 }
 
 .selected {
@@ -621,9 +625,12 @@ input[type="search"]::-webkit-search-cancel-button {
     width: 30vw;
     min-height: 4vh;
     padding: 1vh 1vw;
-    white-space: nowrap; /* 保持一行显示 */
-    overflow: hidden;     /* 溢出隐藏 */
-    text-overflow: ellipsis; /* 显示省略号 */
+    white-space: nowrap;
+    /* 保持一行显示 */
+    overflow: hidden;
+    /* 溢出隐藏 */
+    text-overflow: ellipsis;
+    /* 显示省略号 */
 }
 
 .name-input {
@@ -637,7 +644,7 @@ input[type="search"]::-webkit-search-cancel-button {
     padding: 0.5vh 1vw;
     outline: none;
     font-size: 1em;
-    border: 1px solid #30363d;
+    border: 2px solid #30363d;
     background-color: transparent;
     z-index: 2;
     pointer-events: none;
@@ -647,11 +654,6 @@ input[type="search"]::-webkit-search-cancel-button {
 .name-input::placeholder {
     color: rgba(255, 255, 255, 0.2);
     font-size: 1em;
-}
-
-.name-input:focus,
-.name-input:active {
-    box-shadow: 1px 1px 5px rgba(255, 255, 255, 0.2);
 }
 
 .dir .modify-date {
@@ -680,7 +682,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .download-icon {
-    wid1th: 1.5vw;
+    width: 1.5vw;
     height: 1.5vw;
 }
 
@@ -688,12 +690,12 @@ input[type="search"]::-webkit-search-cancel-button {
     fill: #009900;
 }
 
-.dir .delete{
+.dir .delete {
     margin-left: 0.5vw;
     padding: 0.5vh;
 }
 
-.delete-icon{
+.delete-icon {
     width: 1.2vw;
     height: 1.2vw;
 }
@@ -763,6 +765,305 @@ input[type="search"]::-webkit-search-cancel-button {
 
 #context-menu li span {
     padding: 0.5vh 1vw;
+}
+
+/* 下载任务窗口 */
+#task {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(-50%, -50%);
+    width: 1.2vw;
+    height: 1.2vw;
+    cursor: pointer;
+}
+
+#task-icon svg {
+    width: 1.2vw;
+    height: 1.2vw;
+}
+
+#task-icon:hover svg {
+    fill: #4493f8;
+}
+
+#task-window {
+    position: fixed;
+    display: none;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+    top: 50%;
+    left: 50%;
+    width: 55vw;
+    height: 60vh;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid #30363d;
+    z-index: 2;
+}
+
+.dragging {
+    box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+}
+
+.window-title {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: url('../image/drag.png'), move;
+}
+
+.window-title .list-icon {
+    width: 1vw;
+    height: 1vw;
+}
+
+.list-icon svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.window-title .title {
+    padding: 1vh 0.5vw;
+}
+
+.window-exit {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1.5vw;
+    height: 1.5vw;
+    margin: 0.5vh 0.5vw;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.window-exit svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.window-exit:hover {
+    opacity: 0.7;
+}
+
+#task-window .main {
+    position: relative;
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    border-top: 1px solid #30363d;
+    overflow: scroll;
+}
+
+.task-tools {
+    position: sticky;
+    top: 0;
+    left: 0;
+    height: 100%;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+}
+
+.task-tools .tool-item {
+    padding: 1vh;
+    width: 6vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid #30363d;
+}
+
+.tool-item svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.tool-item .tool-info {
+    font-size: 0.8em;
+    margin-left: 0.3vw;
+}
+
+.tool-item:hover svg {
+    fill: rgb(50, 150, 50);
+}
+
+.tool-item:hover .tool-info {
+    color: rgb(50, 150, 50);
+}
+
+#task-content {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+    list-style: none;
+    border-left: 1px solid #30363d;
+}
+
+.task-item {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5vh 0;
+    border-bottom: 1px solid #30363d;
+}
+
+#task-content .task-item:last-child {
+    border-top: 1px solid #30363d;
+}
+
+.task-info {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    flex-direction: column;
+}
+
+.file-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40vw;
+    margin-bottom: 1vh;
+}
+
+.file-icon {
+    width: 1.2vw;
+    height: 1.2vw;
+}
+
+.file-icon svg {
+    width: 1.2vw;
+    height: 1.2vw;
+}
+
+.file-name {
+    padding: 0 0.5vw;
+    font-size: 1em !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.download-info {
+    position: relative;
+    width: 40vw;
+    height: 2vh;
+    font-size: 0.5em;
+}
+
+.download-info .speed {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.download-info .data-downloaded {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.progress {
+    width: 40vw;
+    height: 1.5vh;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0%;
+    height: 100%;
+    background-color: rgb(76, 175, 80, 0.5);
+    transition: background-color ease-in-out 0.5s;
+}
+
+.task-paused .progress-bar {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.progress-value {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.cancel-download {
+    width: 2vh;
+    height: 2vh;
+    transform: translateY(2vh);
+    margin-left: 0.5vw;
+    margin-right: 2vw;
+    cursor: pointer;
+}
+
+.cancel-download:hover svg {
+    opacity: 0.7;
+}
+
+.cancel-download svg {
+    width: 2vh;
+    height: 2vh;
+}
+
+.task-control {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    width: 1.5vw;
+    height: 1.5vw;
+}
+
+.task-control {
+    width: 2vw;
+    height: 2vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.task-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 2vw;
+    height: 2vw;
+}
+
+.task-button:hover {
+    opacity: 0.7;
+}
+
+.resume-download {
+    display: none;
+}
+
+.resume-download svg {
+    width: 1.7vw !important;
+    height: 1.7vw !important;
 }
 
 /* 上传文件 */
@@ -847,9 +1148,12 @@ input[type="search"]::-webkit-search-cancel-button {
     width: 100%;
     font-size: 1em;
     margin-right: 1vw;
-    white-space: nowrap; /* 保持一行显示 */
-    overflow: hidden;     /* 溢出隐藏 */
-    text-overflow: ellipsis; /* 显示省略号 */
+    white-space: nowrap;
+    /* 保持一行显示 */
+    overflow: hidden;
+    /* 溢出隐藏 */
+    text-overflow: ellipsis;
+    /* 显示省略号 */
 }
 
 .file-delete {
