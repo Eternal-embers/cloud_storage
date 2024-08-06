@@ -529,54 +529,57 @@ input[type="search"]::-webkit-search-cancel-button {
     justify-content: start;
     align-items: center;
     flex-direction: column;
-    padding: 2vh 2vw;
     width: 85%;
     height: 80vh;
     border: 1px solid #30363d;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .property {
-    position: relative;
+    position: fixed;
     width: 100%;
-    height: 3vh;
+    height: 5vh;
     font-size: 1em;
     color: #8d96a0;
 }
 
-.property .name {
+.property .name,
+.property .modify-date,
+.property .type,
+.property .size {
     position: absolute;
-    top: 1vh;
-    left: 2vw;
+    height: 5vh;
+    line-height: 5vh;
+}
+
+.property .name {
+    left: 4vw;
 }
 
 .property .modify-date {
-    position: absolute;
-    top: 1vh;
-    left: 35vw;
+    left: 37vw;
 }
 
 .property .type {
-    position: absolute;
-    top: 1vh;
-    left: 55vw;
+    left: 57vw;
 }
 
 .property .size {
-    position: absolute;
-    top: 1vh;
-    left: 65vw;
+    left: 67vw;
 }
 
 .dir {
     position: relative;
-    top: 4vh;
     display: flex;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
     flex-direction: column;
     width: 100%;
+    height: 100%;
+    margin-top: 5vh;
+    padding: 0 2vw;
     color: #8d96a0;
+    overflow: auto;
 }
 
 .folder,
@@ -587,7 +590,8 @@ input[type="search"]::-webkit-search-cancel-button {
     display: flex;
     justify-content: start;
     align-items: center;
-    padding: 1vh 1vw;
+    padding: 0.1vh 1vw;
+    border: 1px solid transparent;
 
     /* 禁用选中 */
     -webkit-user-select: none !important;
@@ -601,13 +605,13 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .selected {
-    border: 1px solid rgba(0, 150, 255, 0.3) !important;
+    border-color: rgba(0, 150, 255, 0.3) !important;
     background-color: rgba(0, 150, 255, 0.1) !important;
 }
 
 .folder:hover,
 .file:hover {
-    border: 1px solid #30363d;
+    border-color: #30363d;
 }
 
 .edit {
@@ -1061,6 +1065,10 @@ input[type="search"]::-webkit-search-cancel-button {
     display: none;
 }
 
+.redownload {
+    display: none;
+}
+
 .resume-download svg {
     width: 1.7vw !important;
     height: 1.7vw !important;
@@ -1117,29 +1125,32 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 #files-list {
+    position: relative;
+    left: 10%;
+    width: 80%;
     background-color: #161b22;
     margin-bottom: 5vh;
+    padding-bottom: 2vh;
 }
 
 #files-list .title {
-    position: relative;
-    left: 10%;
     width: 8vw;
-    padding: 2vh 0;
+    margin: 2vh 0;
 }
 
 .files-content {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: start;
     flex-direction: column;
+    min-height: 3vh;
 }
 
 .file-item {
     display: flex;
     justify-content: center;
     align-content: center;
-    width: 80%;
+    width: 100%;
     border: 1px solid #30363d;
     padding: 1vh 1vw;
 }
@@ -1180,8 +1191,8 @@ input[type="search"]::-webkit-search-cancel-button {
     left: 50%;
     transform: translateX(-50%);
     width: 6vw;
+    margin-top: 3vh;
     padding: 1vh 0.5vw;
-    margin: 2vh 0;
     border: 1px solid #30363d;
     border-radius: 0.5vw;
     display: flex;

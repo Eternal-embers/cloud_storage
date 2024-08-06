@@ -43,7 +43,6 @@ class DownloadTask {
         this.curStart = 0;
         this.curEnd = 1024 * 1024 - 1;
         this.downloaded = 0;
-        this.receivedLength = 0;
         this.lastDownloaded = 0;
         this.lastTime = new Date().getTime();
         this.startTime = new Date().getTime();
@@ -322,6 +321,12 @@ class DownloadTask {
     /* 恢复下载 */
     resumeDownload() {
         this.isPaused = false;
+        this.downloadFile();
+    }
+
+    /* 重新下载 */
+    redownload() {
+        this.isPaused = false;
     }
 
     /* 触发下载 */
@@ -375,7 +380,10 @@ async function download() {
     await task.fetchFileSize();//获取文件的大小
     await createDownloadTask(task);//在下载窗口创建下载任务
     if (task.fileSize == -1) {
+        let message = `下载文件“${task.filePath}”失败！`;
         downloadError(task, '下载失败，请求文件大小失败！');
+        errorPopup(message);
+        errorConsoleLog(message);
         return;
     }
 
@@ -399,9 +407,28 @@ async function download() {
     }
 }
 
-function downloadError(task, error) {
-    let taskItem = task.taskItem;
-    taskItem.querySelector('.speed').textContent = error;//显示错误信息
+/**
+ * 根据任务对象重新进行下载
+ * @param {DownloadTask} task 
+ */
+async function redownload(task) {
+    await task.fetchFileSize();//获取文件的大小
+    if (task.fileSize == -1) {
+        let message = `下载文件“${task.filePath}”失败！`;
+        downloadError(task, '下载失败，请求文件大小失败！');
+        errorPopup(message);
+        errorConsoleLog(message);
+        return;
+    }
+
+    if (task.fileSize < 1024 * 1024 * 10) { // 小于 10MB 直接下载
+        task.downloadChunk(0, task.fileSize - 1).then(() => {
+            updateProgress(task);
+            endDownload(task);
+        });
+    } else {
+        task.downloadFile();
+    }
 }
 
 /* 创建下载任务 */
@@ -456,6 +483,14 @@ async function createDownloadTask(task) {
                                     p-id="8328"></path>
                             </svg>
                         </div>
+                        <div class="task-button redownload">
+                            <svg t="1722937913331" viewBox="0 0 1024 1024" version="1.1"
+                                xmlns="http://www.w3.org/2000/svg" p-id="38284">
+                                <path
+                                    d="M924.869259 506.747369c-10.290367 0-18.637476 8.346085-18.637476 18.637476 0 53.576219-10.488889 105.542778-31.172977 154.449651-19.989263 47.246047-48.599881 89.687672-85.049025 126.133745-36.44505 36.450167-78.885652 65.063855-126.132722 85.048001-48.910966 20.684088-100.873432 31.174-154.450674 31.174s-105.538685-10.489912-154.449651-31.174c-47.248094-19.984147-89.683579-48.598858-126.133745-85.048001-36.44505-36.446074-65.060785-78.887698-85.043908-126.133745-20.684088-48.90585-31.174-100.872409-31.174-154.449651s10.489912-105.539708 31.174-154.445558c19.983123-47.251164 48.598858-89.687672 85.043908-126.136815 36.450167-36.446074 78.885652-65.060785 126.133745-85.044932 48.910966-20.684088 100.872409-31.174 154.449651-31.174 82.028225 0 161.630191 25.391297 228.114394 72.127737l-96.912214 16.32992c-10.151197 1.709945-16.996093 11.325953-15.282055 21.476127 1.531889 9.101285 9.42158 15.544021 18.356067 15.544021 1.026376 0 2.070148-0.086981 3.119037-0.26299l140.05378-23.601534c10.146081-1.708921 16.990976-11.325953 15.281031-21.475104L780.411169 79.676667c-1.707898-10.151197-11.325953-16.990976-21.476127-15.283078-10.149151 1.709945-16.989953 11.326976-15.282055 21.476127l14.057157 83.435271C685.23039 118.744451 598.634126 91.304496 509.426385 91.304496c-58.59042 0-115.440196 11.479449-168.971389 34.122145-51.691289 21.864984-98.111528 53.160757-137.969305 93.019557-39.859823 39.854707-71.155597 86.279039-93.019557 137.969305-22.638603 53.527101-34.118052 110.3779-34.118052 168.968319s11.479449 115.440196 34.121122 168.971389c21.86089 51.691289 53.156664 98.111528 93.016487 137.969305 39.8588 39.859823 86.279039 71.155597 137.974421 93.019557 53.527101 22.642696 110.376876 34.122145 168.967296 34.122145 58.59042 0 115.440196-11.479449 168.971389-34.122145 51.692313-21.86396 98.111528-53.159734 137.970328-93.019557 39.8588-39.8588 71.154573-86.279039 93.019557-137.969305 22.641673-53.531194 34.121122-110.38097 34.121122-168.971389C943.509804 515.089361 935.162696 506.747369 924.869259 506.747369L924.869259 506.747369zM924.869259 506.747369"
+                                    p-id="38285"></path>
+                            </svg>
+                        </div>
                     </div>
                 </li>`;
     let parser = new DOMParser();
@@ -469,7 +504,7 @@ async function createDownloadTask(task) {
     taskContent.appendChild(taskItem);
     task.taskItem = taskItem;
 
-    //为取消下载按钮、暂停下载按钮、恢复下载按钮添加监听
+    //为取消下载按钮、暂停下载按钮、恢复下载按钮、重新下载按钮添加监听
     taskItem.querySelector('.cancel-download').addEventListener('click', () => {
         task.pauseDownload();//暂停下载
         clearInterval(task.speedUpdater);//清除速度更新器
@@ -480,7 +515,7 @@ async function createDownloadTask(task) {
     let pauseDownloadButton = taskItem.querySelector('.pause-download');
     pauseDownloadButton.addEventListener('click', () => {
         task.pauseDownload();//暂停下载
-        taskItem.classList.remove('task-paused');
+        taskItem.classList.add('task-paused');
         taskItem.querySelector('.speed').textContent = '暂停中';
 
         //将暂停按钮切换到恢复按钮
@@ -498,23 +533,43 @@ async function createDownloadTask(task) {
         resumeDownloadButton.previousElementSibling.style.display = 'flex';
     });
 
+    let redownloadButton = taskItem.querySelector('.redownload');
+    redownloadButton.addEventListener('click', () => {
+        task.startTime = new Date.getTime();//更新开始下载时间
+        task.chunks = [];//清空分片
+        redownload(task);//重新下载
+    });
+
     //进度条达到100%时触发下载
-    const progressValue = taskItem.querySelector('.progress-value');
-    const config = { childList: true, subtree: true };
+    const progressValue = taskItem.querySelector('.progress-bar');
+
+    const config = {
+        attributes: true, // 观察属性的变化
+        attributeFilter: ['value'], // 只观察value属性
+        subtree: true,
+        childList: true
+    };
+
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-            if (mutation.type === 'characterData' && mutation.target.textContent === '100%') {
-                observer.disconnect(); // 断开观察
-                endDownload(task); //结束下载
-                task.triggerDownload(); // 触发文件下载
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                if (mutation.target.getAttribute('value') === '100.00%') {
+                    observer.disconnect(); // 断开观察
+                    endDownload(task); // 结束下载
+                    task.triggerDownload(); // 触发文件下载
+                }
             }
         });
     });
-    observer.observe(progressValue, config);
+
+    // 确保.progress-value元素有value属性
+    if (progressValue.hasAttribute('value')) {
+        observer.observe(progressValue, config);
+    }
 }
 
 /* 更新下载进度 */
-function updateProgress(task) {
+async function updateProgress(task) {
     loaded = task.downloaded;
     total = task.fileSize;
     const progress = (loaded / total) * 100;
@@ -541,17 +596,96 @@ function endDownload(task) {
     let averageSpeed = task.getAverageSpeed();
     speedElement.textContent = `下载完成，平均速度${averageSpeed}, 5秒后将自动删除任务。`;
 
+    //消息提示
+    let message = `下载文件"${task.filePath}"成功！`;
+    InfoPopup(message);
+    infoConsoleLog(message);
+
+    //任务自动删除
     let timeLeft = DownloadTask.clearTaskDelay; // 初始剩余时间
     const interval = setInterval(() => {
         speedElement.textContent = `下载完成，平均速度${averageSpeed}, ${timeLeft}秒后自动删除任务。`;
         timeLeft--;
 
-        if (timeLeft <= 0) {
-            clearInterval(interval);
-            if (taskItem != null) taskItem.remove(); // 清除任务项
-            task = null;
+        if (timeLeft < 0) {
+            setTimeout(() => {
+                clearInterval(interval);
+                if (taskItem != null) taskItem.remove(); // 清除任务项
+                task = null;
+            }, 1000);
         }
     }, 1000);
+}
+
+//下载出错
+function downloadError(task, error) {
+    task.pauseDownload();
+    let taskItem = task.taskItem;
+    taskItem.querySelector('.pause-download').style.display = 'none';
+    taskItem.querySelector('.redownload').style.display = 'flex';
+    taskItem.querySelector('.speed').textContent = error;//显示错误信息
+}
+
+//自定义错误的控制台记录
+function errorConsoleLog(message) {
+    let errorLogCss = "color: white; background-color: rgba(255, 120, 120, 1); padding: 4px 10px; border-radius: 4px; font-weight: bold;"
+    console.log(`%c${message}`, errorLogCss);
+}
+
+//自定义信息的控制台记录
+function infoConsoleLog(message) {
+    let infoLogCss = "background-color: rgba(80,200,120,1); color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold;";
+    console.log(`%c${message}`, infoLogCss);
+}
+
+// 弹出弹窗
+async function popup(msgPopup) {
+    msgPopup.classList.add('show');
+    setTimeout(function () {
+        msgPopup.classList.add('hide');
+        setTimeout(() => {
+            msgPopup.remove();//移除弹窗
+        }, 2000);//两秒后移除弹窗
+    }, 3000);
+}
+
+//信息弹窗
+async function InfoPopup(message) {
+    var popupDiv = document.createElement('div');
+    popupDiv.classList.add('pop-up');
+    popupDiv.innerHTML = `<svg t="1718616163146" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            p-id="8873">
+            <path d="M0 0h1024v1024H0V0z" fill="#202425" opacity=".01" p-id="8874"></path>
+            <path
+                d="M955.733333 512c0 245.077333-198.656 443.733333-443.733333 443.733333S68.266667 757.077333 68.266667 512 266.922667 68.266667 512 68.266667s443.733333 198.656 443.733333 443.733333z"
+                fill="#11AA66" p-id="8875"></path>
+            <path
+                d="M512 102.4C285.7984 102.4 102.4 285.7984 102.4 512s183.3984 409.6 409.6 409.6 409.6-183.3984 409.6-409.6S738.2016 102.4 512 102.4zM34.133333 512C34.133333 248.081067 248.081067 34.133333 512 34.133333s477.866667 213.947733 477.866667 477.866667-213.947733 477.866667-477.866667 477.866667S34.133333 775.918933 34.133333 512z"
+                fill="#11AA66" p-id="8876"></path>
+            <path
+                d="M512 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v17.066666a68.266667 68.266667 0 1 1-136.533334 0V273.066667a68.266667 68.266667 0 0 1 68.266667-68.266667z m0 204.8a68.266667 68.266667 0 0 1 68.266667 68.266667v273.066666a68.266667 68.266667 0 1 1-136.533334 0v-273.066666a68.266667 68.266667 0 0 1 68.266667-68.266667z"
+                fill="#FFFFFF" p-id="8877"></path>
+        </svg>
+        <div class="pop-up-info">${message}</div>`;
+    document.body.appendChild(popupDiv); // 添加到body元素
+
+    popup(popupDiv);
+}
+
+//异常错误弹窗
+function errorPopup(message) {
+    var popupDiv = document.createElement('div');
+    popupDiv.classList.add('pop-up');
+    popupDiv.innerHTML = `<svg t="1718545187783" class="pop-up-icon" viewBox="0 0 1024 1024" version="1.1"
+            xmlns="http://www.w3.org/2000/svg" p-id="12558" width="1vw" height="1vw">
+            <path
+                d="M512 0C230.4 0 0 230.4 0 512s230.4 512 512 512 512-230.4 512-512S793.6 0 512 0zM593.066667 145.066667l-21.333333 486.4c0 29.866667-25.6 51.2-55.466667 51.2l-12.8 0c-29.866667 0-51.2-21.333333-55.466667-51.2L426.666667 145.066667c0-29.866667 21.333333-51.2 46.933333-51.2l68.266667 0C571.733333 93.866667 597.333333 115.2 593.066667 145.066667zM571.733333 913.066667C554.666667 930.133333 533.333333 938.666667 512 938.666667c-25.6 0-42.666667-8.533333-59.733333-25.6C435.2 896 426.666667 878.933333 426.666667 853.333333c0-25.6 8.533333-42.666667 25.6-59.733333C469.333333 776.533333 486.4 768 512 768c25.6 0 46.933333 8.533333 64 25.6 17.066667 17.066667 25.6 34.133333 25.6 59.733333C597.333333 878.933333 588.8 900.266667 571.733333 913.066667z"
+                fill="#F7411C" p-id="12559"></path>
+        </svg>
+        <div class="pop-up-info">${message}</div>`;
+    document.body.appendChild(popupDiv); // 添加到body元素
+
+    popup(popupDiv);
 }
 
 /* ======== 单元测试 ======== */

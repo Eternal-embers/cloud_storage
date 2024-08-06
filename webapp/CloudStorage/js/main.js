@@ -134,6 +134,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // 从DOM中移除对应的文件项
                     filesContent.removeChild(fileItem);
+
+                    if (ignoreFiles.length >= files.length) {
+                        filesContent.style.border = '1px solid #30363d';
+                    }
                 }
             });
         }
