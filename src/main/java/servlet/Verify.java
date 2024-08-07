@@ -146,25 +146,65 @@ public class Verify extends HttpServlet {
             message.setSubject("请输入验证码 " + captchaCode + " 完成注册");
 
             // 设置HTML格式的邮件正文
-            String htmlContent = "<html>" +
-                    "<head>" +
-                    "<title>验证码</title>" +
-                    "<style>" +
-                    "  body { font-family: Arial, sans-serif; }" +
-                    "  .captcha-container { text-align: center; padding: 20px; background-color: #f7f7f7; }" +
-                    "  .captcha-code { font-size: 24px; color: #333; }" +
-                    "</style>" +
-                    "</head>" +
-                    "<body>" +
-                    "<div class=\"captcha-container\">" +
-                    "<p>请在 Cloud Storage 注册页面填写下面的验证码完成注册：</p>" +
-                    "<div class=\"captcha-code\">" + captchaCode + "</div>" +
-                    "<p>验证码有效期为 1 分钟，请尽快完成注册。</p>" +
-                    "<p>如果您未申请 Cloud Storage 账号，请忽略此邮件。</p>" +
-                    "<p>此为系统自动发送的邮件，请勿回复。</p>" +
-                    "  </div>" +
-                    "</body>" +
-                    "</html>";
+            String htmlContent = """
+            <!DOCTYPE html>
+            <html lang="zh">
+                                
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>验证码</title>
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        background-color: #f4f4f4;
+                        margin: 0;
+                        padding: 0;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                    }
+                                
+                    .captcha-container {
+                        background-color: #fff;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        margin: 0;
+                        padding: 30px;
+                        width: 100%;
+                        max-width: 400px;
+                    }
+                                
+                    .captcha-code {
+                        text-align: center;
+                        font-size: 32px;
+                        color: #333;
+                        margin: 20px 0;
+                    }
+                                
+                    p {
+                        color: #666;
+                        line-height: 1.6;
+                    }
+                </style>
+            </head>
+                                
+            <body>
+                <div class="captcha-container">
+                    <h2 style="text-align: center;">验证码</h2>
+                    <p>请在 Cloud Storage 注册页面填写下面的验证码完成注册：</p>
+                    <div class="captcha-code">${captcha}</div>
+                    <p>验证码有效期为 1 分钟，请尽快完成注册。
+                    <p>如果您未申请 Cloud Storage 账号，请忽略此邮件。</p>
+                    <p>此为系统自动发送的邮件，请勿回复。</p>
+                </div>
+            </body>
+                                
+            </html>
+            """;
+
+            htmlContent = htmlContent.replace("${captcha}", captchaCode);
 
             message.setContent(htmlContent, "text/html;charset=UTF-8");
 

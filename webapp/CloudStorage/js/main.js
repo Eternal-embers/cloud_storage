@@ -38,7 +38,7 @@ search_clear.addEventListener('click', function () {
     search_clear.style.display = 'none';
 });
 
-//处理头像上传
+/* ================ 头像上传 ================ */
 document.getElementById('avatar-input').addEventListener('change', function (event) {
     var file = event.target.files[0]; // 获取选择的文件
 
@@ -46,7 +46,7 @@ document.getElementById('avatar-input').addEventListener('change', function (eve
 
     // 检查文件大小
     if (file.size > MAX_FILE_SIZE) {
-        warningPopup("文件太大，不能超过 " + MAX_FILE_SIZE / 1024 / 1024 + "MB.");
+        warningPopup("上传无效，文件大小不能超过 " + MAX_FILE_SIZE / 1024 / 1024 + "MB.");
         return; // 终止函数执行，不上传大文件
     }
 
@@ -62,36 +62,32 @@ document.getElementById('avatar-input').addEventListener('change', function (eve
         xhr.open('POST', 'uploadAvatar', true);
         xhr.onload = function () {
             if (xhr.status === 200) {
-                try {
-                    // 尝试将响应文本解析为 JSON
-                    var response = JSON.parse(xhr.responseText);
-                    if (response.success) {
-                        // 如果服务器返回成功，获取图片 URL
-                        var uploadedImageUrl = response.imageUrl;
-                        // 设置图片路径到 user-avatar
-                        document.querySelector('.user-avatar').src = uploadedImageUrl;
-                    } else {
-                        InfoPopup("头像上传失败，请稍后再试.");
-                        // 如果服务器返回失败，处理错误
-                        console.error('上传头像失败:', response.message);
-                    }
-                } catch (error) {
-                    // 如果响应不是有效的 JSON，按照文本处理
-                    console.error('解析服务器响应出错:', error);
-                    console.error('服务器响应:', xhr.responseText);
-                }
-            } else {
-                // 处理 HTTP 错误
-                console.error('上传头像失败，HTTP 状态码：', xhr.status);
+                location.reload(); // 刷新页面
+            }
+            else if (xhr.status === 400) {
+                errorPopup('上传失败，请检查文件类型是否为图片类型.');
+            }
+            else if (xhr.status === 401) {
+                warningPopup('登录已过期，请重新登录.');
+                setTimeout(() => {
+                    location.href = 'login.html'; // 直接跳转到指定的URL
+                }, 2000);//两秒后跳转到登录页面
+            } else if (xhr.status === 500) {
+                errorPopup('内部服务器错误！');
             }
         };
 
-        xhr.send(formData); // 发送请求
-    } else {
-        console.log('没有选择文件。');
-    }
+        xhr.onerror = function () {
+            console.error('Network Error: Something went wrong with the request.');
+        };
 
-    window.open(location.href, '_self');
+        xhr.ontimeout = function () {
+            // 请求超时
+            warningPopup('请求超时');
+        };
+
+        xhr.send(formData); // 发送请求
+    }
 });
 
 document.querySelector('.change-password').addEventListener('click', function () {
@@ -262,7 +258,7 @@ function deleteFile() {
                 if (response.status === 200) {
                     // 从DOM中移除父节点
                     fileContainer.remove();
-                    InfoPopup('删除文件 \"' + fileName + '\" 成功！');
+                    infoPopup('删除文件 \"' + fileName + '\" 成功！');
                 } else if (response.status === 401) {
                     warningPopup('用户似乎已经退出，请重新登录.');
                 } else if (response.status === 404) {
@@ -618,6 +614,29 @@ document.querySelector('.window-exit').addEventListener('click', function () {
     taskWindow.style.display = 'none';
 });
 
+/* 下载任务窗口的缩放 */
+const windowShrink = taskWindow.querySelector('.window-shrink');
+const windowFull = taskWindow.querySelector('.window-full');
+const taskTools = taskWindow.querySelector('.task-tools');
+windowShrink.addEventListener('click', function () {
+    taskTools.classList.remove('fade-in');
+    taskTools.classList.add('fade-out');
+    taskWindow.classList.add('window-shrunk');
+    setTimeout(() => {
+        taskTools.style.display = 'none';
+    }, 500);
+    windowShrink.style.display = 'none';
+    windowFull.style.display = 'flex';
+});
+windowFull.addEventListener('click', function () {
+    windowFull.style.display = 'none';
+    windowShrink.style.display = 'flex';
+    taskTools.style.display = 'flex';
+    taskTools.classList.remove('fade-out');
+    taskTools.classList.add('fade-in');
+    taskWindow.classList.remove('window-shrunk');
+});
+
 /* ================== 文件名的修改 ================== */
 var inputElement = document.createElement('input');//创建input元素
 inputElement.classList.add('name-input');
@@ -772,7 +791,7 @@ function popup(msgPopup) {
 }
 
 //信息弹窗
-function InfoPopup(message) {
+function infoPopup(message) {
     var popupDiv = document.createElement('div');
     popupDiv.classList.add('pop-up');
     popupDiv.innerHTML = `<svg t="1718616163146" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"

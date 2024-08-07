@@ -40,47 +40,30 @@ public class UploadAvatar extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws  IOException {
+        //身份验证
+        HttpSession session = request.getSession();
+        Long user_id = (Long)session.getAttribute("userID");
+        if(user_id == null) {
+            // 发送401 Unauthorized错误
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not logged in.");
+            return;
+        }
+
         try {
             // 获取图片文件的输入流
             Part filePart = request.getPart("avatar");
 
-            if (filePart == null) {
-                response.sendError(400, "No file found.");
-                return;
-            }
-
             String fileName = extractFileName(filePart); // 提取文件名
             String fileExtension = getFileExtension(fileName); // 获取文件拓展名
+            if (!isImage(fileExtension)) {
+                response.sendError(400, "Invalid file extension. please upload a valid image file.");
+            }
 
             // 创建文件存储目录
             String contextPath = request.getServletContext().getRealPath("avatar");
             File uploadDir = new File(contextPath);
             String uploadPath = uploadDir.getAbsolutePath(); // 获取绝对路径
-            if (!uploadDir.exists())
-                uploadDir.mkdir();
-
-            // 获取请求中的所有 Cookies
-            Cookie[] cookies = request.getCookies();
-
-            // 用于存储 userID 的变量
-            String userID = null;
-
-            // 遍历 Cookies 数组
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    // 检查 Cookie 的名称是否为 "userID"
-                    if ("userID".equals(cookie.getName())) {
-                        userID = cookie.getValue(); // 获取 userID 的值
-                        break; // 找到后退出循环
-                    }
-                }
-            }
-
-            // 使用 userID，例如在响应中显示或进行逻辑处理
-            if (userID == null) {
-                response.getWriter().write("No userID cookie found.");
-                return;
-            }
+            if (!uploadDir.exists()) uploadDir.mkdir();
 
             // 构建文件存储路径
             String avatarPath = UUID.randomUUID() + "." + fileExtension;
@@ -95,41 +78,31 @@ public class UploadAvatar extends HttpServlet {
                 while ((bytesRead = inputSteam.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+                response.sendError(500, "Failed to write file to disk.");
+                return;
             }
 
             //更新数据库中的头像路径
-            ps = conn.prepareStatement("UPDATE user SET avatar = ? WHERE user_id =?");
-            ps.setString(1, avatarPath);
-            ps.setString(2, userID);
-            ps.executeUpdate();
-
-            // 上传成功后，构建 JSON 响应字符串
-            String jsonResponse = "{";
-            jsonResponse += "\"success\": true,";
-            jsonResponse += "\"imageUrl\": \"" + "../" + uploadFile.getName() + "\"";// 使用正斜杠或双重转义反斜杠
-            jsonResponse += "}";
-
-            response.setCharacterEncoding("UTF-8");
-            response.setContentType("application/json");
-            PrintWriter out = response.getWriter();
-            out.print(jsonResponse);
-            out.flush();
+            try {
+                ps = conn.prepareStatement("UPDATE user SET avatar = ? WHERE user_id =?");
+                ps.setString(1, avatarPath);
+                ps.setLong(2, user_id);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                response.sendError(500, "Failed to update database.");
+            } finally {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            // 构建错误响应的 JSON 字符串
-            String errorResponse = "{";
-            errorResponse += "\"success\": false,";
-            errorResponse += "\"message\": \"" + e.getMessage() + "\"";
-            errorResponse += "}";
-
-            // 发送错误 JSON 响应
-            response.getWriter().write(errorResponse);
-        } finally {
-            try {
-                ps.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            response.sendError(500, "internal server error.");
         }
     }
 
@@ -156,5 +129,18 @@ public class UploadAvatar extends HttpServlet {
         } else {
             return ""; // 没有找到文件后缀
         }
+    }
+
+    public boolean isImage(String extension) {
+        // 定义一个包含有效图片扩展名的集合
+        String[] validImageExtensions = {"jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "tif"};
+
+        // 检查扩展名是否在有效的扩展名集合中
+        for (String validExtension : validImageExtensions) {
+            if (validExtension.equalsIgnoreCase(extension)) {
+                return true; // 是一个有效的图片扩展名
+            }
+        }
+        return false; // 不是有效的图片扩展名
     }
 }

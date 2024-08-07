@@ -452,16 +452,16 @@ input[type="search"]::-webkit-search-cancel-button {
     margin-right: 0.5vw;
 }
 
-.on {
+.tool-option.on {
     background-color: #21262d;
     opacity: 1;
 }
 
-.on svg {
+.tool-option.on svg {
     fill: #4493f8;
 }
 
-.on span {
+.tool-option.on span {
     color: #4493f8;
 }
 
@@ -806,9 +806,14 @@ input[type="search"]::-webkit-search-cancel-button {
     backdrop-filter: blur(10px);
     border: 1px solid #30363d;
     z-index: 2;
+    transition: width ease-out 0.5s;
 }
 
-.dragging {
+#task-window.window-shrunk {
+    width: 50vw;
+}
+
+#task-window.dragging {
     box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
 }
 
@@ -834,26 +839,43 @@ input[type="search"]::-webkit-search-cancel-button {
     padding: 1vh 0.5vw;
 }
 
+.window-shrink,
+.window-full,
 .window-exit {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 0.5vh;
     width: 1.5vw;
     height: 1.5vw;
-    margin: 0.5vh 0.5vw;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+.window-shrink svg,
+.window-full svg,
 .window-exit svg {
     width: 1vw;
     height: 1vw;
 }
 
+.window-shrink:hover,
+.window-full:hover,
 .window-exit:hover {
     opacity: 0.7;
+}
+
+.window-full {
+    display: none;
+    right: 2.5vw;
+}
+
+.window-shrink {
+    right: 2.5vw;
+}
+
+.window-exit {
+    right: 0.5vw;
 }
 
 #task-window .main {
@@ -871,11 +893,18 @@ input[type="search"]::-webkit-search-cancel-button {
     position: sticky;
     top: 0;
     left: 0;
+    width: 6vw;
     height: 100%;
     display: flex;
     justify-content: start;
     align-items: center;
     flex-direction: column;
+    transition: width 0.5s ease-out, opacity 0.5s ease-out;
+}
+
+.task-tools.fade-out {
+    width: 0;
+    opacity: 0;
 }
 
 .task-tools .tool-item {
@@ -891,19 +920,35 @@ input[type="search"]::-webkit-search-cancel-button {
 .tool-item svg {
     width: 1vw;
     height: 1vw;
+    transition: fill ease-in-out 0.5s;
 }
 
 .tool-item .tool-info {
     font-size: 0.8em;
     margin-left: 0.3vw;
+    transition: color ease-in-out 0.5s;
 }
 
+.tool-item:hover {
+    opacity: 0.7;
+}
+
+/*
 .tool-item:hover svg {
-    fill: rgb(50, 150, 50);
+    fill: rgb(30, 150, 30);
 }
 
 .tool-item:hover .tool-info {
-    color: rgb(50, 150, 50);
+    color: rgb(30, 150, 30);
+}
+*/
+
+.tool-item.on svg {
+    fill: #4493f8;
+}
+
+.tool-item.on .tool-info {
+    color: #4493f8;
 }
 
 #task-content {
@@ -983,7 +1028,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .progress {
-    width: 40vw;
+    width: 100%;
     height: 1.5vh;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 10px;

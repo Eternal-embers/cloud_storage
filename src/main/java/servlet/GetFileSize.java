@@ -38,7 +38,6 @@ public class GetFileSize extends HttpServlet {
             response.getWriter().write(String.valueOf(fileSize)); // 将文件大小写入响应体
             response.getWriter().flush();
             response.getWriter().close();
-
         } catch (Exception e) {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error"); // 服务器内部错误时返回500错误

@@ -1,4 +1,5 @@
 class DownloadTask {
+    id;//下载任务的id
     filePath;//文件在服务器的相对路径
     fileSize;//文件大小
     mimeType;//文件类型
@@ -14,8 +15,11 @@ class DownloadTask {
     chunks;//下载的分片
     chunkSize;//分片大小
     speed;//下载速度
-    isPaused;//是否暂停的状态量
+    isPaused;//下载是否暂停的状态量
+    isError;//下载是否处于错误状态
+    isFinish;//下载是否完成的状态量
     speedUpdater;//计算速度的定时器
+    static nextID = 0;
     static updateSpeedInterval = 250;//更新速度的间隔时间为250ms
     static clearTaskDelay = 5;//下载完成后5s后自动清除任务
     static defaultFileIcon = `<svg t="1722776915312" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12544">
@@ -38,6 +42,7 @@ class DownloadTask {
         this.chunkSize = chunkSize;
 
         //初始化一些参数
+        this.id = DownloadTask.nextID;
         this.fileSize = -1;
         this.mimeType = '';
         this.curStart = 0;
@@ -51,11 +56,15 @@ class DownloadTask {
         this.chunkSize = chunkSize;// 1MB
         this.speed = 0;
         this.isPaused = false;
+        this.isError = false;
+        this.isFinish = false;
         this.speedUpdater = null;
 
         this.fetchFileSizeUrl += `?path=${encodeURIComponent(this.filePath)}`;
         this.getMimeTypeUrl += `?path=${encodeURIComponent(this.filePath)}`;
         this.downloadChunkUrl += `?path=${encodeURIComponent(this.filePath)}`;
+
+        DownloadTask.nextID++;//下载任务ID自增
     }
 
     /**
@@ -243,6 +252,14 @@ class DownloadTask {
         }
     }
 
+    /*
+    * 移除下载更新器
+    */
+    removeSpeedUpdater() {
+        if (this.speedUpdater != null)
+            clearInterval(this.speedUpdater);
+    }
+
     /**
      * 下载start~end范围的数据分片
      * @param {long} start 起始字节 
@@ -288,6 +305,8 @@ class DownloadTask {
      * fiieSize > 10 MB 分片下载
      */
     async downloadFile() {
+        if (this.isFinish) return;//如果任务已完成则不进行下载
+
         let start = 0;
         let end = start + this.chunkSize - 1;
 
@@ -348,6 +367,8 @@ class DownloadTask {
 
         //移除下载链接
         document.body.removeChild(a);
+
+        this.isFinish = true;//设置下载任务已完成
     }
 
     /* 清除下载任务 */
@@ -358,6 +379,9 @@ class DownloadTask {
         this.taskItem = null;
     }
 }
+
+//下载任务队列
+var downloadTaskQueue = [];
 
 //获取cookie中的userID
 function getUserIDFromCookies() {
@@ -376,6 +400,7 @@ async function download() {
     let fileIcon = fileItem.querySelector('svg').cloneNode(true);
     let filePath = fileItem.getAttribute('file-name');
     task = new DownloadTask(filePath, fileIcon);
+    downloadTaskQueue.push(task);//将创建的下载任务存入下载队列中
 
     await task.fetchFileSize();//获取文件的大小
     await createDownloadTask(task);//在下载窗口创建下载任务
@@ -393,18 +418,20 @@ async function download() {
             endDownload(task);
         });
     } else {
-        //间隔0.5s计算一次实时下载速度
-        task.speedUpdater = setInterval(() => {
-            let taskItem = task.taskItem;
-            let speedElement = taskItem.querySelector('.speed');
-            if (!task.isPaused) {
-                speedElement.textContent = `下载中，${task.getSpeed()}`;
-            } else {
-                speedElement.textContent = `下载中，0 B/s`;
-            }
-        }, DownloadTask.updateSpeedInterval);
+        setSpeedUpdater(task);
         task.downloadFile();
     }
+}
+
+/**
+ * 设置下载任务的速度更新器
+ * @param {DownloadTask} task 下载任务对象
+ */
+function setSpeedUpdater(task) {
+    task.speedUpdater = setInterval(() => {
+        let speedElement = task.taskItem.querySelector('.speed');
+        speedElement.textContent = `下载中，${task.getSpeed()}`;
+    }, DownloadTask.updateSpeedInterval);//间隔0.5s计算一次实时下载速度
 }
 
 /**
@@ -412,6 +439,7 @@ async function download() {
  * @param {DownloadTask} task 
  */
 async function redownload(task) {
+    task.isFinish = false;//重置任务下载完成的状态
     await task.fetchFileSize();//获取文件的大小
     if (task.fileSize == -1) {
         let message = `下载文件“${task.filePath}”失败！`;
@@ -431,7 +459,12 @@ async function redownload(task) {
     }
 }
 
-/* 创建下载任务 */
+
+/**
+ * 创建下载任务
+ * @param {DownloadTask} task 
+ * @returns 
+ */
 var taskContent = document.getElementById('task-content');
 async function createDownloadTask(task) {
     if (task == null) return;
@@ -484,11 +517,10 @@ async function createDownloadTask(task) {
                             </svg>
                         </div>
                         <div class="task-button redownload">
-                            <svg t="1722937913331" viewBox="0 0 1024 1024" version="1.1"
-                                xmlns="http://www.w3.org/2000/svg" p-id="38284">
+                            <svg t="1723019668856" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13523">
                                 <path
-                                    d="M924.869259 506.747369c-10.290367 0-18.637476 8.346085-18.637476 18.637476 0 53.576219-10.488889 105.542778-31.172977 154.449651-19.989263 47.246047-48.599881 89.687672-85.049025 126.133745-36.44505 36.450167-78.885652 65.063855-126.132722 85.048001-48.910966 20.684088-100.873432 31.174-154.450674 31.174s-105.538685-10.489912-154.449651-31.174c-47.248094-19.984147-89.683579-48.598858-126.133745-85.048001-36.44505-36.446074-65.060785-78.887698-85.043908-126.133745-20.684088-48.90585-31.174-100.872409-31.174-154.449651s10.489912-105.539708 31.174-154.445558c19.983123-47.251164 48.598858-89.687672 85.043908-126.136815 36.450167-36.446074 78.885652-65.060785 126.133745-85.044932 48.910966-20.684088 100.872409-31.174 154.449651-31.174 82.028225 0 161.630191 25.391297 228.114394 72.127737l-96.912214 16.32992c-10.151197 1.709945-16.996093 11.325953-15.282055 21.476127 1.531889 9.101285 9.42158 15.544021 18.356067 15.544021 1.026376 0 2.070148-0.086981 3.119037-0.26299l140.05378-23.601534c10.146081-1.708921 16.990976-11.325953 15.281031-21.475104L780.411169 79.676667c-1.707898-10.151197-11.325953-16.990976-21.476127-15.283078-10.149151 1.709945-16.989953 11.326976-15.282055 21.476127l14.057157 83.435271C685.23039 118.744451 598.634126 91.304496 509.426385 91.304496c-58.59042 0-115.440196 11.479449-168.971389 34.122145-51.691289 21.864984-98.111528 53.160757-137.969305 93.019557-39.859823 39.854707-71.155597 86.279039-93.019557 137.969305-22.638603 53.527101-34.118052 110.3779-34.118052 168.968319s11.479449 115.440196 34.121122 168.971389c21.86089 51.691289 53.156664 98.111528 93.016487 137.969305 39.8588 39.859823 86.279039 71.155597 137.974421 93.019557 53.527101 22.642696 110.376876 34.122145 168.967296 34.122145 58.59042 0 115.440196-11.479449 168.971389-34.122145 51.692313-21.86396 98.111528-53.159734 137.970328-93.019557 39.8588-39.8588 71.154573-86.279039 93.019557-137.969305 22.641673-53.531194 34.121122-110.38097 34.121122-168.971389C943.509804 515.089361 935.162696 506.747369 924.869259 506.747369L924.869259 506.747369zM924.869259 506.747369"
-                                    p-id="38285"></path>
+                                    d="M226.787328 222.273536C69.638144 379.42272 70.053888 635.554816 227.715072 793.217024c157.674496 157.674496 413.805568 158.089216 570.954752 0.940032l-20.389888-20.389888c-145.94048 145.94048-383.819776 145.562624-530.248704-0.867328C101.615616 626.4832 101.236736 388.604928 247.177216 242.663424 392.83712 97.00352 630.0928 97.1264 776.558592 242.712576l-66.089984 66.089984 204.668928 55.150592-55.150592-204.668928-63.111168 63.111168C639.152128 65.552384 383.655936 65.381376 226.787328 222.273536z"
+                                    p-id="13524"></path>
                             </svg>
                         </div>
                     </div>
@@ -509,14 +541,16 @@ async function createDownloadTask(task) {
         task.pauseDownload();//暂停下载
         clearInterval(task.speedUpdater);//清除速度更新器
         task.taskItem.remove();//从DOM中移除任务
+        downloadTaskQueue.splice(downloadTaskQueue.findIndex(e => e.id = task.id), 1);//将任务从下载队列删除
         task = null;
     });
 
     let pauseDownloadButton = taskItem.querySelector('.pause-download');
     pauseDownloadButton.addEventListener('click', () => {
         task.pauseDownload();//暂停下载
+        task.removeSpeedUpdater();//移除速度更新器
         taskItem.classList.add('task-paused');
-        taskItem.querySelector('.speed').textContent = '暂停中';
+        taskItem.querySelector('.speed').textContent = '暂停中，0 B/s';
 
         //将暂停按钮切换到恢复按钮
         pauseDownloadButton.style.display = 'none';
@@ -527,6 +561,7 @@ async function createDownloadTask(task) {
     resumeDownloadButton.addEventListener('click', () => {
         task.resumeDownload();//恢复下载
         taskItem.classList.remove('task-paused');
+        setSpeedUpdater(task);//设置下载更新器
 
         //将暂停按钮切换到恢复按钮
         resumeDownloadButton.style.display = 'none';
@@ -535,7 +570,7 @@ async function createDownloadTask(task) {
 
     let redownloadButton = taskItem.querySelector('.redownload');
     redownloadButton.addEventListener('click', () => {
-        task.startTime = new Date.getTime();//更新开始下载时间
+        task.startTime = new Date().getTime();//更新开始下载时间
         task.chunks = [];//清空分片
         redownload(task);//重新下载
     });
@@ -568,7 +603,10 @@ async function createDownloadTask(task) {
     }
 }
 
-/* 更新下载进度 */
+/**
+ * 更新下载进度
+ * @param {DownloadTask} task 
+ */
 async function updateProgress(task) {
     loaded = task.downloaded;
     total = task.fileSize;
@@ -587,10 +625,14 @@ async function updateProgress(task) {
     progressValueElement.textContent = `${progress.toFixed(2)}%`;
 }
 
-/* 结束下载任务 */
+/**
+ * 结束下载任务
+ * @param {DownloadTask} task 下载任务对象
+ * @returns 无返回值
+ */
 function endDownload(task) {
     if (task == null) return;
-    if (task.speedUpdater != null) clearInterval(task.speedUpdater);
+    task.removeSpeedUpdater();//移除速度更新器
     let taskItem = task.taskItem;
     let speedElement = taskItem.querySelector('.speed');
     let averageSpeed = task.getAverageSpeed();
@@ -611,34 +653,92 @@ function endDownload(task) {
             setTimeout(() => {
                 clearInterval(interval);
                 if (taskItem != null) taskItem.remove(); // 清除任务项
-                task = null;
+                downloadTaskQueue.splice(downloadTaskQueue.findIndex(e => e.id = task.id), 1);//将任务从下载队列删除
             }, 1000);
         }
     }, 1000);
 }
 
-//下载出错
+/**
+ * 处理下载出错
+ * @param {DownloadTask} task 下载任务对象
+ * @param {String} error 错误信息提示
+ */
 function downloadError(task, error) {
     task.pauseDownload();
+    task.isError = true;
     let taskItem = task.taskItem;
     taskItem.querySelector('.pause-download').style.display = 'none';
     taskItem.querySelector('.redownload').style.display = 'flex';
     taskItem.querySelector('.speed').textContent = error;//显示错误信息
 }
 
-//自定义错误的控制台记录
+/* ======== 下载窗口左侧工具栏 ======== */
+const autoDownloadButton = document.querySelector('.tool-item.auto-download');
+const pauseAllButton = document.querySelector('.tool-item.pause');
+const resumeAllButton = document.querySelector('.tool-item.resume');
+const cancelAllButton = document.querySelector('.tool-item.cancel');
+
+//开启自动下载
+autoDownloadButton.addEventListener('click', () => {
+    if (!autoDownloadButton.classList.contains('on')) {
+        autoDownloadButton.classList.add('on');
+    } else {
+        autoDownloadButton.classList.remove('on');
+    }
+    //autoDownloadButton();//开启自动下载
+});
+
+//暂停所有任务
+pauseAllButton.addEventListener('click', function () {
+    downloadTaskQueue.forEach((task) => {
+        if (task.isError) return;
+        let taskItem = task.taskItem;
+        let pauseDownloadButton = taskItem.querySelector('.pause-download');
+
+        task.pauseDownload();//暂停下载
+        taskItem.classList.add('task-paused');
+        taskItem.querySelector('.speed').textContent = '暂停中，0 B/s';
+
+        //将暂停按钮切换到恢复按钮
+        pauseDownloadButton.style.display = 'none';
+        pauseDownloadButton.nextElementSibling.style.display = 'flex';
+    })
+})
+
+//删除所有任务
+cancelAllButton.addEventListener('click', function () {
+    downloadTaskQueue.forEach((task) => {
+        task.removeSpeedUpdater();
+        task.taskItem.remove();//从DOM中移除任务
+        task = null;
+    })
+
+    downloadTaskQueue = [];//清空下载队列
+})
+
+/**
+ * 自定义错误的控制台记录
+ * @param {String} message 消息字符串
+ */
 function errorConsoleLog(message) {
     let errorLogCss = "color: white; background-color: rgba(255, 120, 120, 1); padding: 4px 10px; border-radius: 4px; font-weight: bold;"
     console.log(`%c${message}`, errorLogCss);
 }
 
-//自定义信息的控制台记录
+/**
+ * 自定义信息的控制台记录
+ * @param {String} message 消息字符串
+ */
 function infoConsoleLog(message) {
     let infoLogCss = "background-color: rgba(80,200,120,1); color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold;";
     console.log(`%c${message}`, infoLogCss);
 }
 
-// 弹出弹窗
+/**
+ * 弹出弹窗
+ * @param {HTML Object} msgPopup 弹窗的HTML元素
+ */
 async function popup(msgPopup) {
     msgPopup.classList.add('show');
     setTimeout(function () {
@@ -649,7 +749,10 @@ async function popup(msgPopup) {
     }, 3000);
 }
 
-//信息弹窗
+/**
+ * 信息弹窗
+ * @param {String} message 消息字符串
+ */
 async function InfoPopup(message) {
     var popupDiv = document.createElement('div');
     popupDiv.classList.add('pop-up');
@@ -672,7 +775,10 @@ async function InfoPopup(message) {
     popup(popupDiv);
 }
 
-//异常错误弹窗
+/**
+ * 异常错误弹窗
+ * @param {String} message 消息字符串
+ */
 function errorPopup(message) {
     var popupDiv = document.createElement('div');
     popupDiv.classList.add('pop-up');

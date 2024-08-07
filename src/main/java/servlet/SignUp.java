@@ -2,23 +2,22 @@ package servlet;
 
 import database.DatabaseConfig;
 import secure.Secure;
-import user.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
+import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Base64;
+import java.sql.*;
 import java.util.Date;
 import java.util.Random;
 
 @WebServlet("/pages/signup")
 public class SignUp extends HttpServlet implements Secure {
     private static final long serialVersionUID = 1L;
+
+    // 上传文件存储目录
+    private static final String UPLOAD_DIRECTORY = "upload";
 
     static Connection conn;
     static PreparedStatement ps;
@@ -94,6 +93,42 @@ public class SignUp extends HttpServlet implements Secure {
                     ps.executeUpdate();
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
+                }
+
+                Long userID = null;
+                try {
+                    ps = conn.prepareStatement("select user_id from user where identifier =?");
+                    ps.setString(1, email);
+
+                    ResultSet rs = ps.executeQuery();
+                    if(rs.next()) userID = rs.getLong("user_id");
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+
+                //在上传目录创建用户专属文件夹
+                String uploadPath = request.getServletContext().getRealPath("./") + File.separator + UPLOAD_DIRECTORY;
+                File userFolder = new File(uploadPath + File.separator + userID);
+                if (!userFolder.exists()) {
+                    boolean isCreated = userFolder.mkdir();
+                    if (!isCreated) {
+                        System.out.println("Failed to create user folder: " + userFolder.getAbsolutePath());
+                    }
+                }
+
+                // 创建默认文件夹
+                String[] folderNames = {"Documents", "Images", "Music", "Videos", "Others"};
+                for (String folderName : folderNames) {
+                    // 创建文件夹的完整路径
+                    File folder = new File(userFolder, folderName);
+
+                    // 创建文件夹
+                    if (!folder.exists()) {
+                        boolean isCreated = folder.mkdir();
+                        if (!isCreated) {
+                            System.out.println("Failed to create folder: " + folderName);
+                        }
+                    }
                 }
 
                 System.out.println("New user registration: " + email + ", UserName: " + userName);

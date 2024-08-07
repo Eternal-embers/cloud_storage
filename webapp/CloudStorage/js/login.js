@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         popup();
 
         setTimeout(function () {
-            window.location.href = 'main.jsp';
+            window.open('main.jsp', '_self');//打开新窗口
         }, 3000);
     };
 
