@@ -4,6 +4,8 @@
 <%@ page import="java.util.*" %>
 <%@ page import="java.io.*" %>
 <%@ page import="java.text.DateFormat" %>
+<%@ page import="java.nio.file.Path" %>
+<%@ page import="java.nio.file.Paths" %>
 
 <%!
     Connection conn = null;
@@ -990,7 +992,9 @@
                     pstmt.execute();
                     ResultSet rs = pstmt.getResultSet();
                     while(rs.next()) {
-                        String fileName = rs.getString("file_name");
+                        String filePath = rs.getString("file_path");
+                        Path path = Paths.get(filePath);
+                        String fileName = path.getFileName().toString();
 
                         long bytes = rs.getLong("file_size");
                         String fileSize = "";
@@ -1007,7 +1011,7 @@
                         java.sql.Timestamp modifyTime = rs.getTimestamp("modify_time");
 
                         sb.setLength(0);
-                        sb.append(String.format("<div class=\"file\" file-name=\"%s\" file-id=\"%s\">", fileName, rs.getLong("file_id")));
+                        sb.append(String.format("<div class=\"file\" file-path=\"%s\" file-name=\"%s\" file-id=\"%s\">", filePath, fileName, rs.getLong("file_id")));
 
                         //添加svg
                         if(fileTypeMap.get(fileType) == null){
@@ -1159,7 +1163,7 @@
     </ul>
 
     <div class="upload">
-        <form method="post" action="upload?user_id=<%= userID.toString() %>" enctype="multipart/form-data" id="uploadForm">
+        <form method="post" action="upload" enctype="multipart/form-data" id="uploadForm">
             <div id="select">
                 <div class="upload-info">
                     <svg t="1718873544506" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"

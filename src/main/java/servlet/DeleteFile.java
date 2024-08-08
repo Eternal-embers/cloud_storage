@@ -7,6 +7,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
@@ -44,7 +45,8 @@ public class DeleteFile extends HttpServlet {
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         //验证用户是否登录
-        String user_id = request.getSession().getAttribute("user_id").toString();
+        HttpSession session = request.getSession();
+        Long user_id = (Long)session.getAttribute("userID");
         if(user_id == null) {
             // 发送401 Unauthorized错误
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not logged in.");
@@ -55,7 +57,7 @@ public class DeleteFile extends HttpServlet {
         try {
             String file_id = request.getParameter("file_id");
             //查询文件
-            ps = conn.prepareStatement("SELECT file_name FROM files WHERE file_id = ?");
+            ps = conn.prepareStatement("SELECT file_path FROM files WHERE file_id = ?");
             ps.setString(1, file_id);
             ResultSet rs = ps.executeQuery();
 
@@ -64,20 +66,20 @@ public class DeleteFile extends HttpServlet {
                 return;
             }
 
-            String fileName = rs.getString("file_name");
+            String filePath = rs.getString("file_path");
 
             //删除数据库中的记录
             ps = conn.prepareStatement("DELETE FROM files WHERE user_id = ? AND file_id = ?");
-            ps.setString(1, user_id);
+            ps.setLong(1, user_id);
             ps.setString(2, file_id);
             ps.executeUpdate();
 
             // 删除文件
-            String uploadPath = request.getServletContext().getRealPath("./") + File.separator + UPLOAD_DIRECTORY + File.separator + user_id;
-            File file = new File(uploadPath + File.separator + fileName);
+            String uploadPath = request.getServletContext().getRealPath(filePath);
+            File file = new File(uploadPath);
             if(file.exists()) file.delete();
 
-            System.out.println("delete file: " + fileName + ", from user: " + user_id);
+            System.out.println("delete file: " + uploadPath + ", from user: " + user_id);
         } catch (SQLException e) {
             e.printStackTrace();
             response.sendError(500, "Failed to delete file from database.");

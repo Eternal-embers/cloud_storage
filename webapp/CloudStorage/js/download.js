@@ -398,7 +398,7 @@ function getUserIDFromCookies() {
 async function download() {
     let fileItem = event.target.closest('.file');
     let fileIcon = fileItem.querySelector('svg').cloneNode(true);
-    let filePath = fileItem.getAttribute('file-name');
+    let filePath = fileItem.getAttribute('file-path');
     task = new DownloadTask(filePath, fileIcon);
     downloadTaskQueue.push(task);//将创建的下载任务存入下载队列中
 
@@ -469,12 +469,16 @@ var taskContent = document.getElementById('task-content');
 async function createDownloadTask(task) {
     if (task == null) return;
 
+    //获取文件名
+    let parts = task.filePath.split(/[\\\/]/);
+    let fileName = parts.pop();
+
     //将下载任务添加到下载窗口
-    let htmlContent = `<li class="task-item" file-path="${task.filePath}">
+    let htmlContent = `<li class="task-item" file-path="${task.filePath}" file-name="${fileName}">
                     <div class="task-info">
                         <div class="file-info">
                             <div class="file-icon"></div>
-                            <div class="file-name">${task.filePath}</div>
+                            <div class="file-name">${fileName}</div>
                         </div>
                         <div class="download-info">
                             <div class="speed">正在准备下载</div>

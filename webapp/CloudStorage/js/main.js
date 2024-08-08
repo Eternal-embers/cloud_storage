@@ -170,7 +170,7 @@ function downloadFile() {
     }
 
     // 从父节点属性中获取文件名
-    const fileName = fileContainer.getAttribute('file-name');
+    const fileName = fileContainer.getAttribute('file-path');
 
     //从父节点属性中获取文件id
     const fileID = fileContainer.getAttribute('file-id');
@@ -218,40 +218,18 @@ function deleteFile() {
     // 找到.delete元素的父节点，即包含文件信息的div
     const fileContainer = event.target.closest('.file');
 
-    console.log('删除文件:', fileContainer);
-
-    // 假设userID存储在页面的某个元素中，例如一个隐藏的input元素
-    const userIdElement = document.getElementById('userID');
-    const userID = userIdElement ? userIdElement.getAttribute('user-id') : null;
-
-    // 检查userID是否存在
-    if (!userID) {
-        console.error('User ID not found.');
-        warningPopup('用户似乎已经退出，请重新登录.');
-        return;
-    }
-
-    // 从父节点属性中获取文件名
-    const fileName = fileContainer.getAttribute('file-name');
+    //从父节点属性中获取文件名
+    const fileName = fileContainer.getAttribute('file-path');
 
     //从父节点属性中获取文件id
     const fileID = fileContainer.getAttribute('file-id');
 
-    // 构建请求体
-    const requestBody = {
-        fileName: fileName,
-        userID: userID
-    };
-
-    let url = 'deleteFile?' + "user_id=" + userID + "&file_id=" + fileID;
+    let url = 'deleteFile?file_id=' + fileID;
 
 
     // 发送请求到服务器删除文件
     fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
     })
         .then(
             response => {
@@ -260,7 +238,10 @@ function deleteFile() {
                     fileContainer.remove();
                     infoPopup('删除文件 \"' + fileName + '\" 成功！');
                 } else if (response.status === 401) {
-                    warningPopup('用户似乎已经退出，请重新登录.');
+                    warningPopup('登录已过期，请重新登录.');
+                    setTimeout(() => {
+                        location.href = 'login.html'; // 直接跳转到指定的URL
+                    }, 2000);//两秒后跳转到登录页面
                 } else if (response.status === 404) {
                     errorPopup('文件 \"' + fileName + '\" 不存在！');
                 } else if (response.status == 500) {
@@ -271,9 +252,6 @@ function deleteFile() {
                 }
             }
         )
-        .then(data => {
-            console.log('File deletion response:', data);
-        })
         .catch(error => {
             console.error('Error deleting file:', error);
         });

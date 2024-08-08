@@ -11,11 +11,13 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
-import java.text.DateFormat;
 import java.util.*;
 
 /**
@@ -54,6 +56,9 @@ public class Upload extends HttpServlet {
     private static final long MAX_FILE_SIZE = 1024 * 1024 * 2048L; // 最大文件大小为1GB
     private static final long MAX_REQUEST_SIZE = 1024 * 1024 * 4096L; // 最大请求大小为4GB
 
+    //服务器的路径
+    static String serverPath = "";
+
     /**
      * 上传数据及保存文件，并将上传文件记录到数据库中
      */
@@ -69,9 +74,13 @@ public class Upload extends HttpServlet {
         }
 
         //获取user_id
-        if (request.getParameter("user_id") == null)
-            response.sendRedirect("main.jsp?message=user login required");
-        Long userID = Long.valueOf(request.getParameter("user_id"));
+        HttpSession session = request.getSession();
+        Long userID = (Long)session.getAttribute("userID");
+        if(userID == null) {
+            // 发送401 Unauthorized错误
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not logged in.");
+            return;
+        }
 
         // 配置上传参数
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -158,6 +167,7 @@ public class Upload extends HttpServlet {
                         File storeFile = new File(filePath);
                         item.write(storeFile);// 保存文件到硬盘
 
+                        serverPath = request.getServletContext().getRealPath("./");
                         insert(storeFile, userID);
 
                         // 在控制台输出文件的上传路径
@@ -190,9 +200,9 @@ public class Upload extends HttpServlet {
 
     //向数据库中插入数据
     public static void insert(File file, Long userID) {
-
-
         try {
+            String filePath = file.getAbsolutePath();
+            String relativePath = getRelativePath(serverPath, filePath);//上传的文件在服务器中的相对路径
             String fileName = file.getName();
             String fileType = fileName.substring(fileName.lastIndexOf('.'));
             long fileSize = file.length();//字节数
@@ -201,17 +211,27 @@ public class Upload extends HttpServlet {
             if (fileName.lastIndexOf('.') >= 255)
                 fileName = fileName.substring(0, 255) + fileType;
 
-            String sql = "INSERT INTO files(user_id, file_name, file_size, file_type) VALUES(?,?,?,?)";
+            String sql = "INSERT INTO files(user_id, file_path, file_size, file_type) VALUES(?,?,?,?)";
 
             ps = conn.prepareStatement(sql);
-            ps = conn.prepareStatement(sql);
             ps.setLong(1, userID);
-            ps.setString(2, fileName);
+            ps.setString(2, relativePath);
             ps.setLong(3, fileSize);
             ps.setString(4, fileType);
             ps.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    //获取上传文件的相对路径
+    public static String getRelativePath(String basePath, String targetPath) {
+        Path base = Paths.get(basePath);
+        Path target = Paths.get(targetPath);
+
+        // 计算相对路径
+        Path relative = base.relativize(target);
+
+        return relative.toString();
     }
 }

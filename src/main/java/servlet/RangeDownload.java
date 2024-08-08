@@ -4,6 +4,7 @@ import javax.servlet.*;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
+import java.net.URLEncoder;
 
 @WebServlet(name = "RangeDownload", urlPatterns = {"/pages/RangeDownload"})
 public class RangeDownload extends HttpServlet {
@@ -33,7 +34,9 @@ public class RangeDownload extends HttpServlet {
             long fileSize = file.length();
 
             response.setContentType("application/octet-stream");
-            response.setHeader("Content-Disposition", "attachment;filename=\"" + file.getName() + "\"");
+
+            String encodedFileName = URLEncoder.encode(file.getName(), "UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
 
             // 检查请求中是否包含Range头
             String range = request.getHeader("Range");
