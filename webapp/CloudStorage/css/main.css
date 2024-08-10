@@ -605,8 +605,21 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .selected {
-    border-color: rgba(0, 150, 255, 0.3) !important;
+    border: 1px solid rgba(0, 150, 255, 0.3) !important;
     background-color: rgba(0, 150, 255, 0.1) !important;
+}
+
+.selected:hover {
+    border: 1px solid rgba(0, 150, 255, 0.3);
+}
+
+.open {
+    border: 1px solid rgba(50, 180, 50, 0.3);
+    background-color: rgba(50, 180, 50, 0.1);
+}
+
+.file.open:hover {
+    border: 1px solid rgba(50, 180, 50, 0.3);
 }
 
 .folder:hover,
@@ -1253,4 +1266,276 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .clear-icon {
     margin-right: 0.5vw;
+}
+
+/* 左侧预览窗口控制栏 */
+#preview-control {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    width: 22.5vw;
+    height: 60%;
+    transform: translate(-100%, -50%);
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    z-index: 3;
+}
+
+/* 从左侧弹出的动画 */
+@keyframes slideInFromLeft {
+    from {
+        transform: translate(-100%, -50%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(0, -50%);
+        opacity: 1;
+    }
+}
+
+/* 向左侧消失的动画 */
+@keyframes slideOutFromLeft {
+    from {
+        transform: translate(0, -50%);
+        opacity: 1;
+    }
+
+    to {
+        transform: translate(-100%, -50%);
+        opacity: 0;
+    }
+}
+
+#preview-control.slide-in-from-Left {
+    animation: slideInFromLeft 0.5s ease-in;
+    transform: translate(0, -50%);
+    opacity: 1;
+}
+
+#preview-control.slide-out-from-Left {
+    animation: slideOutFromLeft 0.5s ease-in;
+}
+
+.preview-control .main {
+    width: 20vw;
+    height: 60vh;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-control-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 4vh;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-control-icon {
+    width: 1vw;
+    height: 1vw;
+}
+
+.preview-control-icon svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.preview-control-title {
+    font-size: 1em;
+    padding: 1vh 0.5vw;
+}
+
+.preview-content {
+    min-width: 20vw;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.preview-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20vw;
+    padding: 0 0.5vw;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: default;
+    transition: background-color ease-in 0.5s;
+}
+
+.preview-item.active svg {
+    fill: rgb(20, 120, 40);
+}
+
+.preview-item.active .file-name {
+    color: rgb(20, 120, 40);
+}
+
+.preview-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.preview-item .file-icon {
+    width: 1vw;
+    height: 1vw;
+}
+
+.file-icon svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.file-name {
+    width: 100%;
+    font-size: 1em;
+    padding: 1vh 0.5vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.preview-close {
+    width: 1vw;
+    height: 1vw;
+    cursor: pointer;
+}
+
+.preview-close svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.preview-close:hover svg {
+    filter: brightness(2);
+}
+
+#preview-control-close {
+    width: 2.5vw;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color ease-in 0.5s;
+}
+
+#preview-control-close svg {
+    width: 1.2vw;
+    height: 1.2vw;
+}
+
+#preview-control-close:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+#preview-control-close:hover svg {
+    filter: brightness(2);
+}
+
+/* 预览窗口 */
+#preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+}
+
+.preview-window {
+    position: relative;
+    width: 75vw;
+    transform: translate(17.5%, 10%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 3;
+}
+
+.preview-window * {
+    color: rgba(255, 255, 255, 0.5);
+    fill: rgba(255, 255, 255, 0.5);
+}
+
+.window-header {
+    position: relative;
+    width: 100%;
+    height: 5vh;
+}
+
+.preview-title {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 1vh 1vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-title svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.preview-title .title {
+    padding: 0.5vh 0;
+    font-size: 1em;
+    margin-left: 0.5vw;
+}
+
+.window-minimize,
+.window-close {
+    position: absolute;
+    top: 0.5vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1.5vw;
+    height: 1.5vw;
+    cursor: pointer;
+}
+
+.window-minimize:hover,
+.window-close:hover {
+    opacity: 0.7;
+}
+
+.window-minimize svg,
+.window-close svg {
+    width: 1vw;
+    height: 1vw;
+}
+
+.window-close {
+    right: 0.5vw;
+}
+
+.window-minimize {
+    right: 3vw;
+}
+
+/* 文本预览 */
+.txt-preview {
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.txt-preview pre {
+    font-family: 'Consolas', 'Courier New', monospace;
+    padding: 1% 5%;
 }

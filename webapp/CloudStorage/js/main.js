@@ -259,14 +259,12 @@ function deleteFile() {
 
 //下载所有已选项
 function downloadSelected() {
-    let selectedDownloadTasks = document.querySelectorAll('.selected .download');
-    selectedDownloadTasks.forEach((e) => {
-        e.click();//点击下载按钮触发下载任务
-    });
+    let selectedDownloadTasks = document.querySelectorAll('.file.selected');
+    multiDownload(selectedDownloadTasks);
 }
 
 //删除所有已选项
-function deleteSelected() {
+async function deleteSelected() {
     let selectedDeleteTasks = document.querySelectorAll('.selected .delete');
     downloadCount = selectedDeleteTasks.length;
     selectedDeleteTasks.forEach((e) => {
@@ -754,6 +752,48 @@ function getFormattedDate() {
 
     return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
 };
+
+/* ================== 文件打开状态的切换 ================== */
+let files = dir.querySelectorAll('.file');
+files.forEach((e) => {
+    e.addEventListener('dblclick', function () {
+        e.classList.add('open');
+        preview(e);
+    });
+});
+
+/* ================== 左侧预览任务栏 ================== */
+
+//最小化预览窗口
+function minimizePreview(event) {
+    let previewWindow = event.target.closest('.preview-window');
+    previewWindow.style.display = 'none';
+}
+
+//关闭预览窗口
+function closePreview(event) {
+    let previewWindow = event.target.closest('.preview-window');
+    previewWindow.remove();
+}
+
+//鼠标靠近页面底部显示预览菜单栏
+const pageWidth = window.innerWidth;
+const previewControl = document.getElementById('preview-control');
+
+document.addEventListener('mousemove', function (event) {
+    const distanceToLeft = event.clientX;
+    if (distanceToLeft <= pageWidth * 0.01) {
+        previewControl.classList.remove('slide-out-from-Left');
+        previewControl.classList.add('slide-in-from-Left');
+    }
+});
+
+//点击收起按钮收起预览菜单栏
+const closePreviewControl = document.getElementById('preview-control-close');
+closePreviewControl.addEventListener('click', function () {
+    previewControl.classList.remove('slide-in-from-Left');
+    previewControl.classList.add('slide-out-from-Left');
+});
 
 /* ================ 自定义消息提示 ================ */
 
